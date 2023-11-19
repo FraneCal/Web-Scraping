@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 import random
 import time
 
@@ -29,16 +30,23 @@ driver = webdriver.Chrome(service=service, options=options)
 driver.get(URL)
 time.sleep(random.uniform(3, 5))
 
-email = driver.find_element(By.XPATH, '//*[@id="session_key"]')
-email.click()
-email.send_keys('YOUR EMAIL')
+email_input = driver.find_element(By.XPATH, '//*[@id="session_key"]')
+email_input.click()
+email_input.send_keys('YOUR EMAIL')
 
-password = driver.find_element(By.XPATH, '//*[@id="session_password"]')
-password.click()
-password.send_keys('YOUR PASSWORD')
+password_input = driver.find_element(By.XPATH, '//*[@id="session_password"]')
+password_input.click()
+password_input.send_keys('YOUR PASSWORD')
 
 time.sleep(1)
-sign_in = driver.find_element(By.XPATH, '//*[@id="main-content"]/section[1]/div/div/form/div[2]/button')
-sign_in.click()
+sign_in_button = driver.find_element(By.XPATH, '//*[@id="main-content"]/section[1]/div/div/form/div[2]/button')
+sign_in_button.click()
+
+time.sleep(5)
+
+job_input = driver.find_element(By.XPATH, '//*[@id="global-nav-search"]/div/button/span/svg')
+job_input.click()
+job_input.send_keys('python developer')
+driver.find_element_by_name("Value").send_keys(Keys.ENTER)
 
 time.sleep(5)
