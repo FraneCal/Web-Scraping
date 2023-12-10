@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
 import concurrent.futures
+import csv
+import pandas as pd
 
 header = {
   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
@@ -44,7 +46,7 @@ number_of_reviews_list = []
 images_list = []
 
 with concurrent.futures.ThreadPoolExecutor() as executor:
-    results = executor.map(scrape_page, range(1, 20))
+    results = executor.map(scrape_page, range(1, 10))
 
 for result in results:
     name_list.extend(result[0])
@@ -52,11 +54,25 @@ for result in results:
     number_of_reviews_list.extend(result[2])
     images_list.extend(result[3])
 
-# Output results
-print(len(name_list))
-print(len(price_list))
-print(len(number_of_reviews_list))
-print(len(images_list))
+
+merged_list = [[name_list[i], price_list[i], number_of_reviews_list[i], images_list[i]] for i in range(len(name_list))]
+
+
+headers = ['Name', 'Price', 'Number of Reviews', 'Images']
+data = [headers] + merged_list
+csv_file_path = 'output.csv'
+
+with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
+    writer = csv.writer(file)
+    writer.writerows(data)
+
+print(f'The data has been successfully saved to {csv_file_path}')
+
+df = pd.DataFrame(merged_list, columns=['Name', 'Price', 'Number of Reviews', 'Images'])
+
+print(df)
+
+
 
 
 
