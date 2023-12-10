@@ -61,6 +61,24 @@ print(len(images_list))
 
 
 
+# concurrent.futures.ThreadPoolExecutor(): This line creates a thread pool executor, which is a part of the concurrent.futures module in Python. 
+# A thread pool is a group of pre-initialized threads that are ready to execute tasks concurrently.
+
+# with ... as executor:: The with statement is used here to create a context manager for the thread pool executor. It ensures proper resource management and cleanup when the block of code inside the with statement is exited.
+
+# executor.map(scrape_page, range(1, 20)): The map method of the executor is used to apply the scrape_page function to each element in the iterable range(1, 20) concurrently. It divides the iterable into chunks and 
+#executes the function on each chunk using the threads from the thread pool.
+
+# scrape_page: This is the function that performs the scraping logic for a given page number.
+
+# range(1, 20): It generates an iterable with page numbers from 1 to 19 (inclusive).
+
+# executor.map returns an iterator of results from applying the function to each element in the iterable.
+
+# The results are stored in the results variable.
+
+
+
 
 
 
