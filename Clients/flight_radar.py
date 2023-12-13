@@ -11,6 +11,7 @@ URL = "https://www.flightradar24.com/data/aircraft/n230wp"
 driver.get(URL)
 time.sleep(3)
 
+# Handling pop ups and log in
 pop_up_button = driver.find_element(By.XPATH, '//*[@id="onetrust-accept-btn-handler"]')
 pop_up_button.click()
 time.sleep(1)
@@ -21,17 +22,18 @@ time.sleep(1)
 
 email = driver.find_element(By.XPATH, '//*[@id="headlessui-disclosure-panel-2"]/div/div/div/form/div[1]/div/input')
 email.click()
-email.send_keys('fcalus00@fesb.hr')
+email.send_keys('YOUR EMAIL')
 
 password = driver.find_element(By.XPATH, '//*[@id="headlessui-disclosure-panel-2"]/div/div/div/form/div[2]/div/input')
 password.click()
-password.send_keys('In71948N')
+password.send_keys('YOUR PASSWORD')
 
 log_in_button = driver.find_element(By.XPATH, '//*[@id="headlessui-disclosure-panel-2"]/div/div/div/form/button')
 log_in_button.click()
 time.sleep(5)
 
 try:
+    # Adjust the number 50 to more if needed
     for _ in range(0, 50):
         # Scroll to the bottom of the page and click "Load more" button
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -43,6 +45,7 @@ except:
 
 time.sleep(2)
 
+# Loading data and saving it to this varible
 page_source = driver.page_source
 driver.quit()
 
