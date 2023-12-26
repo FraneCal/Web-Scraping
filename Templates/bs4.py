@@ -16,6 +16,6 @@ response = requests.get(URL, headers=header)
 response.raise_for_status()  
 
 web_page = response.text
-soup = BeautifulSoup(web_page, 'lxml')
+soup = BeautifulSoup(web_page, 'html.parser')
 
 # START SCRAPING :)
