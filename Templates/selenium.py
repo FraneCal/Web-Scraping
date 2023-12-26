@@ -14,6 +14,6 @@ page_source = driver.page_source
 
 driver.quit()
 
-soup = BeautifulSoup(page_source, "lxml")
+soup = BeautifulSoup(page_source, "html.parser")
 
 # START SCRAPING :)
