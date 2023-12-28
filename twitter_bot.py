@@ -68,4 +68,18 @@ search_bar = driver.find_element(By.XPATH, '//*[@id="react-root"]/div/div/div[2]
 search_bar.click()
 search_bar.send_keys('elon musk')
 search_bar.send_keys(Keys.ENTER)
-time.sleep(5)
+time.sleep(3)
+
+driver.execute_script(f"window.scrollTo(0, 50);")
+
+comment_button = driver.find_element(By.XPATH, '//*[@id="id__xsj0or34jj"]/div[1]/div')
+comment_button.click()
+time.sleep(1)
+
+reply_message = driver.find_element(By.XPATH, '//*[@id="layers"]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div/div[3]/div[2]/div[2]/div/div/div/div[1]/div[2]/div/div/div/div/div/div/div/div/div/div/div/label/div[1]/div/div/div/div/div/div[2]/div/div/div/div')
+reply_message.click()
+reply_message.send_keys('hello')
+
+reply = driver.find_element(By.XPATH, '//*[@id="layers"]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div/div[3]/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/div[2]')
+reply.click()
+time.sleep(4)
