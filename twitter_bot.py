@@ -40,13 +40,17 @@ next_button_1 = driver.find_element(By.XPATH, '//*[@id="layers"]/div[2]/div/div/
 next_button_1.click()
 time.sleep(1)
 
-user_name = driver.find_element(By.XPATH, '//*[@id="layers"]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div[2]/label/div/div[2]/div/input')
-user_name.click()
-user_name.send_keys('John17503033017')
+#Twitter sometimes asks for username sometimes doesn't
+try:
+    user_name = driver.find_element(By.XPATH, '//*[@id="layers"]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div[2]/label/div/div[2]/div/input')
+    user_name.click()
+    user_name.send_keys('John17503033017')
 
-next_button_2 = driver.find_element(By.XPATH, '//*[@id="layers"]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div/div/div/div')
-next_button_2.click()
-time.sleep(1)
+    next_button_2 = driver.find_element(By.XPATH, '//*[@id="layers"]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div/div/div/div')
+    next_button_2.click()
+    time.sleep(1)
+except:
+    print("Username input field not found. Twitter may not have requested it.")
 
 password = driver.find_element(By.XPATH, '//*[@id="layers"]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input')
 password.click()
