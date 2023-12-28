@@ -27,6 +27,9 @@ driver = webdriver.Chrome(service=service, options=options)
 driver.get(URL)
 time.sleep(random.uniform(3, 5))
 
+accept_cookies = driver.find_element(By.XPATH, '//*[@id="layers"]/div/div/div/div/div/div[2]/div[1]/div')
+accept_cookies.click()
+
 sign_in = driver.find_element(By.XPATH, '//*[@id="react-root"]/div/div/div[2]/main/div/div/div[1]/div[1]/div/div[3]/div[5]/a/div')
 sign_in.click()
 time.sleep(2)
@@ -70,16 +73,33 @@ search_bar.send_keys('elon musk')
 search_bar.send_keys(Keys.ENTER)
 time.sleep(3)
 
-driver.execute_script(f"window.scrollTo(0, 50);")
+driver.execute_script(f"window.scrollTo(0, 300);")
 
-comment_button = driver.find_element(By.XPATH, '//*[@id="id__xsj0or34jj"]/div[1]/div')
-comment_button.click()
-time.sleep(1)
+time.sleep(2)
 
-reply_message = driver.find_element(By.XPATH, '//*[@id="layers"]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div/div[3]/div[2]/div[2]/div/div/div/div[1]/div[2]/div/div/div/div/div/div/div/div/div/div/div/label/div[1]/div/div/div/div/div/div[2]/div/div/div/div')
+# comment_button = driver.find_element(By.CSS_SELECTOR, 'div[aria-label="182 Replies. Reply"]')
+# comment_button.click()
+# time.sleep(1)
+
+article = driver.find_element(By.XPATH, '//*[@id="react-root"]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/section/div/div/div[8]/div/div/article/div/div/div[2]/div[2]/div[2]')
+article.click()
+time.sleep(2)
+
+driver.execute_script(f"window.scrollTo(0, 100);")
+
+reply_message = driver.find_element(By.XPATH, '//*[@id="react-root"]/div/div/div[2]/main/div/div/div/div[1]/div/section/div/div/div[1]/div/div/div/div/div[2]/div[1]/div/div/div/div[2]/div[1]/div/div/div/div/div[1]/div/div/div/div/div/label/div[1]/div/div/div/div/div/div[2]/div/div/div/div')
 reply_message.click()
-reply_message.send_keys('hello')
+reply_message.send_keys('good4u bbbb')
 
-reply = driver.find_element(By.XPATH, '//*[@id="layers"]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div/div[3]/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/div[2]')
+reply = driver.find_element(By.XPATH, '//*[@id="react-root"]/div/div/div[2]/main/div/div/div/div[1]/div/section/div/div/div[1]/div/div/div/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div[2]/div/div/div/div[2]/div/span/span')
 reply.click()
-time.sleep(4)
+time.sleep(2)
+
+#Twitter sometimes asks for something and you have to click "Got it"
+try:
+    got_it_button = driver.find_element(By.XPATH, '//*[contains(text(), "Got it")]')
+    driver.execute_script("arguments[0].click();", got_it_button)
+except:
+    print("It looks like there is not 'Got it' button. Carry on.")
+
+time.sleep(15)
