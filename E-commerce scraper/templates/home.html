@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Amazon Scraper</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Amazon Scraper</h1>
+        <nav class="mb-4">
+            <ul class="nav">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Subscription</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">About Us</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Contact</a>
+                </li>
+            </ul>
+        </nav>
+        <form method="post">
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" placeholder="Enter product name" name="product_name" required>
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="submit">Search</button>
+                </div>
+            </div>
+        </form>
+        {% if results %}
+            <form method="post" action="{{ url_for('delete_results') }}">
+                <button class="btn btn-danger mb-3" type="submit">Delete Results</button>
+            </form>
+            <h2>Search results for '{{ product_name }}'</h2>
+            <ul class="list-group">
+                {% for result in results %}
+                    <li class="list-group-item">
+                        <strong>{{ result[0] }}</strong> - {{ result[1] }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% elif no_results %}
+            <h2>No search results found for '{{ product_name }}'</h2>
+        {% endif %}
+    </div>
+</body>
+</html>
