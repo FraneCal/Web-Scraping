@@ -9,6 +9,19 @@
 <body>
     <div class="container mt-5">
         <h1 class="mb-4">Contact Us</h1>
+        <nav class="mb-4">
+            <ul class="nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('about') }}">About Us</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('contact') }}">Contact</a>
+                </li>
+            </ul>
+        </nav>
         <form method="post">
             <!-- Add your form fields here -->
             <div class="form-group">
