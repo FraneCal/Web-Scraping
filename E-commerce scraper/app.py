@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect, url_for
+from flask import Flask, render_template, request, session, redirect, url_for, flash
 from bs4 import BeautifulSoup
 import requests
 import concurrent.futures
@@ -61,10 +61,10 @@ def scrape_page(product_name, page_num):
                     local_name_list.append(name)
                     local_price_list.append(price)
                     local_image_list.append(image_url)
-                    print(f"Product: {name}\nPrice: {price}\nImage URL: {image_url}\n{'=' * 30}")
+                    #print(f"Product: {name}\nPrice: {price}\nImage URL: {image_url}\n{'=' * 30}")
 
             except AttributeError as e:
-                print(f"Error extracting data from box on page {page_num}: {e}")
+                #print(f"Error extracting data from box on page {page_num}: {e}")
                 continue
 
         return local_name_list, local_price_list, local_image_list
