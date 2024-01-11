@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import requests
 import concurrent.futures
 import sqlite3
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
