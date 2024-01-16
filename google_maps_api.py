@@ -1,16 +1,14 @@
 import requests
 
-def get_place_id(api_key, query):
-    base_url = "https://maps.googleapis.com/maps/api/place/findplacefromtext/json"
+def get_place_ids(api_key, query):
+    base_url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
     params = {
-        "input": query,
-        "inputtype": "textquery",
-        "fields": "place_id",
+        "query": query,
         "key": api_key,
     }
 
     response = requests.get(base_url, params=params)
-    results = response.json().get("candidates", [])
+    results = response.json().get("results", [])
 
     place_ids = [result["place_id"] for result in results]
     return place_ids
@@ -29,10 +27,10 @@ def get_place_details(api_key, place_id):
     return place_details
 
 def main():
-    api_key = "ENTER YOUR GOOGLE MAPS API KEY"
+    api_key = "YOUR GOOGLE MAPS API KEY"
     query = "Bauhaus Zagreb"
 
-    place_ids = get_place_id(api_key, query)
+    place_ids = get_place_ids(api_key, query)
 
     for place_id in place_ids:
         place_details = get_place_details(api_key, place_id)
