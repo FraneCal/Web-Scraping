@@ -78,7 +78,7 @@ def index():
         query = request.form['query']
         output_format = request.form['output_format'].lower()
 
-        api_key = "AIzaSyCplLL5nvAccR5vVDKJmQBAsImpbiqPF00"
+        api_key = "YOUR GOOGLE MAPS API KEY"
 
         place_ids = get_place_ids(api_key, query)
 
