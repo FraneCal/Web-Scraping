@@ -17,19 +17,6 @@ def get_place_ids(api_key, query):
     place_ids = [result["place_id"] for result in results]
     return place_ids
 
-def get_place_ids(api_key, query):
-    base_url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
-    params = {
-        "query": query,
-        "key": api_key,
-    }
-
-    response = requests.get(base_url, params=params)
-    results = response.json().get("results", [])
-
-    place_ids = [result["place_id"] for result in results]
-    return place_ids
-
 def get_place_details(api_key, place_id):
     base_url = "https://maps.googleapis.com/maps/api/place/details/json"
     params = {
@@ -62,7 +49,7 @@ def fetch_details_async(api_key, place_ids):
                 "Address": address,
                 "Phone Number": phone_number,
                 "Number of Reviews": user_ratings_total,
-                "Rating": rating,
+                "Total rating": rating,
             })
 
     for info in data:
