@@ -57,7 +57,10 @@ class GoogleMapsScraperApp:
 
     def get_place_ids(self, api_key, query):
         base_url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
-        params = {"query": query, "key": api_key}
+        params = {
+            "query": query,
+            "key": api_key,
+        }
 
         response = requests.get(base_url, params=params)
         results = response.json().get("results", [])
@@ -69,7 +72,7 @@ class GoogleMapsScraperApp:
         base_url = "https://maps.googleapis.com/maps/api/place/details/json"
         params = {
             "place_id": place_id,
-            "fields": "name,formatted_address,formatted_phone_number",
+            "fields": "name,formatted_address,formatted_phone_number,user_ratings_total,rating,reviews",
             "key": api_key,
         }
 
@@ -89,8 +92,19 @@ class GoogleMapsScraperApp:
                 name = place_details.get("name", "N/A")
                 address = place_details.get("formatted_address", "N/A")
                 phone_number = place_details.get("formatted_phone_number", "N/A")
+                user_ratings_total = place_details.get("user_ratings_total", "N/A")
+                rating = place_details.get("rating", "N/A")
 
-                data.append({"Name": name, "Address": address, "Phone Number": phone_number})
+                data.append({
+                    "Name": name,
+                    "Address": address,
+                    "Phone Number": phone_number,
+                    "Number of Reviews": user_ratings_total,
+                    "Total rating": rating,
+                })
+
+        for info in data:
+            print(info)
 
         return data
 
@@ -99,11 +113,14 @@ class GoogleMapsScraperApp:
         index = 1
         while True:
             filename = f"{query}{f'({index})' if index > 1 else ''}"
-            full_filename = desktop_path / f"{filename}.{output_format}"
+            full_filename = desktop_path.joinpath(f"{filename}.{output_format}")
 
             if not full_filename.exists():
                 break
             index += 1
+
+        # Create the directory if it doesn't exist
+        desktop_path.mkdir(parents=True, exist_ok=True)
 
         try:
             with open(full_filename, 'w') as file:
@@ -114,6 +131,7 @@ class GoogleMapsScraperApp:
                     df.to_csv(full_filename, index=False)
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {str(e)}")
+
 
 if __name__ == "__main__":
     root = tk.Tk()
