@@ -100,25 +100,29 @@ def save_to_existing_file(data, query, output_format):
     - output_format (str): The desired output format (CSV or JSON).
     """
     index = 1
+    query_filename = "_".join(query.split())
     while True:
-        filename = f"{query}_{output_format}{f'({index})' if index > 1 else ''}"
+        filename = f"{query_filename}{f'({index})' if index > 1 else ''}"
         full_filename = f"{filename}.{output_format}"
 
         if not os.path.exists(full_filename):
             break
         index += 1
 
-    if os.path.exists(full_filename):
-        existing_data = pd.read_json(full_filename) if output_format == 'json' else pd.read_csv(full_filename)
-        combined_data = pd.concat([existing_data, pd.DataFrame(data)], ignore_index=True)
-        if output_format == 'json':
-            combined_data.to_json(full_filename, orient='records', lines=True)
-        elif output_format == 'csv':
-            combined_data.to_csv(full_filename, index=False)
-        elif output_format == 'xlsx':
-            combined_data.to_excel(full_filename, index=False)
-        print("Successfully saved")  # Print success message
-    
+    if output_format == 'xlsx':
+        with pd.ExcelWriter(full_filename, engine='openpyxl') as writer:
+            df = pd.DataFrame(data)
+            df.to_excel(writer, index=False)
+    else:
+        with open(full_filename, 'w', encoding='utf-8') as file:
+            if output_format == 'json':
+                json.dump(data, file, ensure_ascii=False, indent=2)
+            elif output_format == 'csv':
+                df = pd.DataFrame(data)
+                df.to_csv(file, index=False)
+
+    print(f"Successfully saved to {full_filename}")  # Print success message
+
 
 def main():
     """
@@ -126,21 +130,24 @@ def main():
 
     Takes user input for the query, fetches place details, and saves the data to a file.
     """
-    query = input("Enter the query you want to search: ")
-    api_key = "YOUR GOOGLE MAPS API KEY"
+    while True:
+        query = input("Enter the query you want to search (enter 'q' to quit): ")
+        if query.lower() == 'q':
+            break
 
-    place_ids = get_place_ids(api_key, query)
+        api_key = "YOUR GOOGLE MAPS API KEY"
+        place_ids = get_place_ids(api_key, query)
 
-    if place_ids:
-        data = fetch_details_async(api_key, place_ids)
+        if place_ids:
+            data = fetch_details_async(api_key, place_ids)
 
-        output_format = input("Choose the output format (CSV, JSON, XLSX): ").lower()
+            output_format = input("Choose the output format (CSV, JSON, XLSX): ").lower()
 
-        save_to_existing_file(data, query, output_format)
-        print("Successfully saved")  # Print success message
+            save_to_existing_file(data, query, output_format)
+            #print("Successfully saved")  # Print success message
 
-    else:
-        print("No data to export.")
+        else:
+            print("No data to export.")
 
 if __name__ == "__main__":
     main()
