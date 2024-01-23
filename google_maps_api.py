@@ -21,7 +21,7 @@ def get_place_details(api_key, place_id):
     base_url = "https://maps.googleapis.com/maps/api/place/details/json"
     params = {
         "place_id": place_id,
-        "fields": "name,formatted_address,formatted_phone_number,user_ratings_total,rating,reviews",
+        "fields": "name,formatted_address,formatted_phone_number,user_ratings_total,rating,reviews,website",
         "key": api_key,
     }
 
@@ -43,11 +43,13 @@ def fetch_details_async(api_key, place_ids):
             phone_number = place_details.get("formatted_phone_number", "N/A")
             user_ratings_total = place_details.get("user_ratings_total", "N/A")
             rating = place_details.get("rating", "N/A")
+            website = place_details.get("website", "N/A")
 
             data.append({
                 "Name": name,
                 "Address": address,
                 "Phone Number": phone_number,
+                "Website": website,
                 "Number of Reviews": user_ratings_total,
                 "Total rating": rating,
             })
