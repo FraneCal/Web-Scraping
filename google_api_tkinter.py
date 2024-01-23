@@ -42,7 +42,7 @@ class GoogleMapsScraperApp:
             return
 
         try:
-            api_key = "AIzaSyCplLL5nvAccR5vVDKJmQBAsImpbiqPF00"  # Replace with your actual API key
+            api_key = "YOUR GOOGLE MAPS API KEY"  # Replace with your actual API key
 
             place_ids = self.get_place_ids(api_key, query)
 
