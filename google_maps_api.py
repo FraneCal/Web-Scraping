@@ -5,6 +5,16 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 
 def get_place_ids(api_key, query):
+    """
+    Retrieve place IDs using the Google Places Text Search API.
+
+    Parameters:
+    - api_key (str): Your Google Maps API key.
+    - query (str): The query string for the place search.
+
+    Returns:
+    - list: List of place IDs.
+    """
     base_url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
     params = {
         "query": query,
@@ -18,6 +28,16 @@ def get_place_ids(api_key, query):
     return place_ids
 
 def get_place_details(api_key, place_id):
+    """
+    Retrieve detailed information about a place using the Google Places Details API.
+
+    Parameters:
+    - api_key (str): Your Google Maps API key.
+    - place_id (str): The unique identifier for the place.
+
+    Returns:
+    - dict: Detailed information about the place.
+    """
     base_url = "https://maps.googleapis.com/maps/api/place/details/json"
     params = {
         "place_id": place_id,
@@ -31,6 +51,16 @@ def get_place_details(api_key, place_id):
     return place_details
 
 def fetch_details_async(api_key, place_ids):
+    """
+    Fetch detailed information about multiple places asynchronously.
+
+    Parameters:
+    - api_key (str): Your Google Maps API key.
+    - place_ids (list): List of place IDs.
+
+    Returns:
+    - list: List of dictionaries containing detailed information about each place.
+    """
     data = []
 
     with ThreadPoolExecutor() as executor:
@@ -60,6 +90,14 @@ def fetch_details_async(api_key, place_ids):
     return data
 
 def save_to_existing_file(data, query, output_format):
+    """
+    Save data to a new or existing file in JSON or CSV format.
+
+    Parameters:
+    - data (list): List of dictionaries containing place information.
+    - query (str): The original query used for the place search.
+    - output_format (str): The desired output format (CSV or JSON).
+    """
     index = 1
     while True:
         filename = f"{query}_{output_format}{f'({index})' if index > 1 else ''}"
@@ -80,6 +118,11 @@ def save_to_existing_file(data, query, output_format):
         pd.DataFrame(data).to_json(full_filename, orient='records', lines=True) if output_format == 'json' else pd.DataFrame(data).to_csv(full_filename, index=False)
 
 def main():
+    """
+    Main function to execute the Google Maps scraping process.
+
+    Takes user input for the query, fetches place details, and saves the data to a file.
+    """
     query = input("Enter the query you want to search: ")
     api_key = "YOUR GOOGLE MAPS API KEY"
 
