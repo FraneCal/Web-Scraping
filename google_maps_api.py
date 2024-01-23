@@ -85,7 +85,8 @@ def fetch_details_async(api_key, place_ids):
             })
 
     for info in data:
-        print(info)
+        #print(info)
+        pass
 
     return data
 
@@ -112,10 +113,12 @@ def save_to_existing_file(data, query, output_format):
         combined_data = pd.concat([existing_data, pd.DataFrame(data)], ignore_index=True)
         if output_format == 'json':
             combined_data.to_json(full_filename, orient='records', lines=True)
-        else:
+        elif output_format == 'csv':
             combined_data.to_csv(full_filename, index=False)
-    else:
-        pd.DataFrame(data).to_json(full_filename, orient='records', lines=True) if output_format == 'json' else pd.DataFrame(data).to_csv(full_filename, index=False)
+        elif output_format == 'xlsx':
+            combined_data.to_excel(full_filename, index=False)
+        print("Successfully saved")  # Print success message
+    
 
 def main():
     """
@@ -131,9 +134,10 @@ def main():
     if place_ids:
         data = fetch_details_async(api_key, place_ids)
 
-        output_format = input("Choose the output format (CSV, JSON): ").lower()
+        output_format = input("Choose the output format (CSV, JSON, XLSX): ").lower()
 
         save_to_existing_file(data, query, output_format)
+        print("Successfully saved")  # Print success message
 
     else:
         print("No data to export.")
