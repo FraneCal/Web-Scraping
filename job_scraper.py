@@ -100,7 +100,7 @@ for li in li_elements:
             'Company URL': company_url if company_url else '',  # Placeholder if URL not found
             'Date of Job Posting': post_date_text,
             'Job Title': job_title,
-            'Country': location,
+            'Country': 'Germany',
             'Source': 'https://de.indeed.com'
         })
 
