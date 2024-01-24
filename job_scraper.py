@@ -2,13 +2,38 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
+import pandas as pd
 import random
 import time
+from googlesearch import search
+from datetime import datetime, timedelta
 
 def get_url(position):
     template = "https://de.indeed.com/jobs?q={}"
     url = template.format(position)
     return url
+
+def parse_non_standard_date(date_str):
+    try:
+        if "Vor" in date_str:
+            if ">" in date_str:
+                days_ago = 31  # Assign a value greater than 30 if the exact number is not specified
+            else:
+                days_ago = int(date_str.split()[1])
+            return (datetime.today() - timedelta(days=days_ago)).strftime("%d-%m-%Y")
+    except ValueError:
+        pass
+    return "Invalid Date Format"
+
+def get_company_url(company_name):
+    try:
+        search_query = f"{company_name} official website"
+        search_results = search(search_query, pause=2)
+        for result in search_results:
+            return result
+    except Exception as e:
+        print(f"Error searching for {company_name} URL: {e}")
+        return None
 
 url = get_url('cloud engineer')
 
@@ -49,6 +74,9 @@ soup = BeautifulSoup(page_source, "html.parser")
 # Find all <li> elements
 li_elements = soup.find_all('li', class_='css-5lfssm eu4oa1w0')
 
+# Create a list to store data
+data = []
+
 # Extract job details from each <li>
 for li in li_elements:
     job_title_span = li.find('h2', class_='jobTitle css-14z7akl eu4oa1w0')
@@ -62,16 +90,22 @@ for li in li_elements:
 
     post_date_span = li.find('span', 'date')
     post_date_text = post_date_span.text.strip() if post_date_span else "Post date not found"
+    today = datetime.today().strftime("%Y-%m-%d")
 
+    # Check if any of the fields end with "not found"
+    if not (job_title.endswith("not found") or company_name.endswith("not found") or location.endswith("not found") or post_date_text.endswith("not found")):
+        company_url = get_company_url(company_name)
+        data.append({
+            'Company Name': company_name,
+            'Company URL': company_url if company_url else '',  # Placeholder if URL not found
+            'Date of Job Posting': post_date_text,
+            'Job Title': job_title,
+            'Country': location,
+            'Source': 'https://de.indeed.com'
+        })
 
-    print(job_title)
-    print(company_name)
-    print(location)
-    print(post_date_text)
+# Create a DataFrame from the data
+df = pd.DataFrame(data, columns=['Company Name', 'Company URL', 'Date of Job Posting', 'Job Title', 'Country', 'Source'])
 
-    # Extract job link
-# box2 = soup.find_all('div', class_='css-1pjs7a4 eu4oa1w0')
-# print(box2)
-# for box in box2:
-#     job_link = box.find('a', class_='css-775knl')
-#     print(job_link)
+# Save the clean data to an Excel sheet
+df.to_excel('job_data.xlsx', index=False)
