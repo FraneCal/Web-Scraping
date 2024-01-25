@@ -42,4 +42,6 @@ soup = BeautifulSoup(page_source, "html.parser")
 boxes = soup.find_all("div", class_="row col-dsk")
 for box in boxes:
     job_title = box.find('a', class_='launch_ext_link')['title']
+    date_posted = box.find("span", class_="result-hover-false").getText()
     print(job_title)
+    print(date_posted)
