@@ -82,4 +82,4 @@ data = {
 df = pd.DataFrame(data)
 
 # Save to Excel
-df.to_excel("officina_empleo_{key_word}.xlsx", index=False)
+df.to_excel(f"officina_empleo_{key_word}.xlsx", index=False)
