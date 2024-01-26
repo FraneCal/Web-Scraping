@@ -5,7 +5,9 @@ import random
 import time
 import pandas as pd
 
-URL = "https://www.oficinaempleo.com/buscar/ofertas/cloud-engineer"
+key_word = 'cloud-engineer'
+
+URL = f"https://www.oficinaempleo.com/buscar/ofertas/{key_word}"
 
 user_agents = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36",
@@ -80,4 +82,4 @@ data = {
 df = pd.DataFrame(data)
 
 # Save to Excel
-df.to_excel("officina_empleo_filtered.xlsx", index=False)
+df.to_excel("officina_empleo_{key_word}.xlsx", index=False)
