@@ -1,10 +1,9 @@
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-import time
 import random
+import time
+import pandas as pd
 
 URL = "https://www.oficinaempleo.com/buscar/ofertas/cloud-engineer"
 
@@ -28,20 +27,76 @@ driver = webdriver.Chrome(service=service, options=options)
 driver.get(URL)
 time.sleep(3)
 
+# scroll_speed = 2  # seconds
+# scroll_increment = 0
+# max_attempts = 10  # Set a maximum number of attempts to avoid infinite loop
+
+# while max_attempts > 0:
+#     current_height = driver.execute_script("return Math.max( document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);")
+#     driver.execute_script(f"window.scrollTo(0, {current_height});")
+#     time.sleep(scroll_speed)
+
+#     new_height = driver.execute_script("return Math.max( document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);")
+
+#     if new_height == current_height:
+#         # No more dynamic content to load
+#         break
+
+#     max_attempts -= 1
+
 scroll_increment = 0
 while scroll_increment < 500:
     driver.execute_script(f"window.scrollTo(0, {scroll_increment * 10});")
     time.sleep(random.uniform(1, 2))
-    scroll_increment += 50
+    scroll_increment += 100
+
+time.sleep(2)
 
 page_source = driver.page_source
 driver.quit()
 
 soup = BeautifulSoup(page_source, "html.parser")
 
+# Initialize data lists
+job_titles = []
+date_posted_list = []
+company_names = []
+locations = []
+sources = []
+
 boxes = soup.find_all("div", class_="row col-dsk")
 for box in boxes:
-    job_title = box.find('a', class_='launch_ext_link')['title']
-    date_posted = box.find("span", class_="result-hover-false").getText()
-    print(job_title)
-    print(date_posted)
+    job_link = box.find('a', class_='launch_ext_link')
+    if job_link:
+        job_title = job_link.get("title", "Job title not found")
+    else:
+        job_title = "Job title not found"
+    date_posted = box.find("span", class_="result-hover-false").text.strip()
+    company_name = soup.find('div', class_='col-sm-2 search-results-item-loc col-dsk').find('span').getText(strip=True)
+    location = soup.find('div', class_='col-sm-2 search-results-item-loc col-dsk').find('a').getText()
+
+    # print(job_title)
+    # print(date_posted)
+    # print(company_name)
+    # print(location)
+
+    # Append data to lists
+    job_titles.append(job_title)
+    date_posted_list.append(date_posted)
+    company_names.append(company_name)
+    locations.append(location)
+    sources.append("https://www.oficinaempleo.com")
+
+# Create a DataFrame
+data = {
+    "Job Title": job_titles,
+    "Date Posted": date_posted_list,
+    "Company Name": company_names,
+    "Location": locations,
+    "Source": sources,
+}
+
+df = pd.DataFrame(data)
+
+# Save to Excel
+df.to_excel("officina_empleo.xlsx", index=False)
