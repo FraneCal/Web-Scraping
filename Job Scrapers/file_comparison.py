@@ -2,10 +2,7 @@ import pandas as pd
 
 # List of filenames
 file_names = [
-    'job_data_cloud_engineer.xlsx',
-    'job_data_devops engineer.xlsx',
-    'job_data_site reliability engineer.xlsx',
-    'job_data_devops consultant.xlsx'
+    'ENTER FILE NAMES.xlsx',
 ]
 
 # List to store dataframes
