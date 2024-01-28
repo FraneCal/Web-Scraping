@@ -31,11 +31,11 @@ time.sleep(10)  # Wait for the page to load
 # Logging in
 email_input = driver.find_element(By.NAME, 'email')
 email_input.click()
-email_input.send_keys('fcalus00@fesb.hr')
+email_input.send_keys('YOUR EMAIL ADRESS')
 
 password_input = driver.find_element(By.NAME, 'password')
 password_input.click()
-password_input.send_keys('autotelefon23')
+password_input.send_keys('YOUR PASSWORD')
 
 time.sleep(1)
 
@@ -43,18 +43,6 @@ log_in_button = driver.find_element(By.XPATH, '//*[@id="provider-mounter"]/div/d
 log_in_button.click()
 
 time.sleep(5)
-
-# Navigating to the saved list
-saved_list = driver.find_element(By.XPATH, '//*[@id="main-app"]/div[2]/div/div/div[2]/div[2]/div/header/section[1]/div[2]/a[3]')
-saved_list.click()
-
-time.sleep(3)
-
-# Opening the test list
-test_lista = driver.find_element(By.XPATH, '//*[@id="main-app"]/div[2]/div/div/div[2]/div[2]/div/div/div/div/div/div/div[4]/div/div/div/div/div[1]/div/table/tbody/tr/td[1]/span/span')
-test_lista.click()
-
-time.sleep(3)
 
 # Hiding filters
 hide_filters = driver.find_element(By.XPATH, '//*[@id="main-app"]/div[2]/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div[2]/div/div[2]/div/span/button/div/div/span')
@@ -93,18 +81,14 @@ for page_num in range(num_pages_to_scrape):
     phone_numbers_clean = [phone.find('a') for phone in phone_numbers]
     numbers = [phone.text.strip() for phone in phone_numbers_clean if phone is not None]
 
-    # --------------------- EMAILS --------------------- #
-    emails = soup.find_all('div', class_='zp_JywRU')
-    emails_clean = [email.find('span', class_='zp_t08Bv').text.strip() for email in emails]
+    # # --------------------- EMAILS --------------------- #
+    # emails = soup.find_all('div', class_='zp_JywRU')
+    # emails_clean = [email.find('span', class_='zp_t08Bv').text.strip() for email in emails]
 
     # --------------------- NUMBER OF EMPLOYEES --------------------- #
     number_of_employees = soup.find_all('span', class_='zp_Y6y8d')
     employees = [employee.text.strip() for employee in number_of_employees]
     numbers_only = employees[2::3]
-
-    # Print the extracted data
-    # for name, co_name, number, employee in zip(f_l_name_clean, company_names_clean, numbers, numbers_only):
-    #     print(f"Name: {name}, Company name: {co_name}, Phone Number: {number}, Number of employees: {employee}")
 
     all_data['Name'].extend(f_l_name_clean)
     all_data['Company Name'].extend(company_names_clean)
