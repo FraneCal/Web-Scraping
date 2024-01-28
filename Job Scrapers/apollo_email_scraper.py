@@ -29,11 +29,11 @@ time.sleep(10)  # Wait for the page to load
 # Logging in
 email_input = driver.find_element(By.NAME, 'email')
 email_input.click()
-email_input.send_keys('fcalus00@fesb.hr')
+email_input.send_keys('YOUR EMAIL ADRESS')
 
 password_input = driver.find_element(By.NAME, 'password')
 password_input.click()
-password_input.send_keys('autotelefon23')
+password_input.send_keys('YOUR PASSWORD')
 
 time.sleep(1)
 
