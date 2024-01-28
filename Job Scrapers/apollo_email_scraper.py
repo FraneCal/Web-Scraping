@@ -48,41 +48,77 @@ hide_filters.click()
 
 time.sleep(2)
 
-tables = driver.find_elements(By.TAG_NAME, 'table')
+# XPath for the next page button
+next_page_button_xpath = '//*[@id="main-app"]/div[2]/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div[4]/div/div/div/div/div[3]/div/div[2]/button[2]'
 
-# Assuming you want the first table, you can use index 0
-if tables:
-    table = tables[0]
+# Number of pages you want to scrape
+num_pages_to_scrape = 4  # You can adjust this number based on your requirement
 
-    # Find all tbody elements inside the table
-    tbody_elements = table.find_elements(By.CLASS_NAME, 'zp_RFed0')
+# Variable to keep track of the page number
+page_num = 0
 
-    # Loop through each tbody
-    for tbody in tbody_elements:
-        # Find the fourth td tag with class 'zp_aBhrx' inside the tbody
-        td_elements = tbody.find_elements(By.CLASS_NAME, 'zp_aBhrx')
+# List to store scraped emails
+all_emails = []
 
-        # Check if there is a fourth td element
-        if len(td_elements) >= 4:
-            # Find the first button with type "button" inside the fourth td element
-            button = td_elements[3].find_element(By.CSS_SELECTOR, 'button[type="button"]')
+while page_num < num_pages_to_scrape:
+    # Increment the page number
+    page_num += 1
 
-            # Click the button
-            button.click()
+    # Assuming you want the first table, you can use index 0
+    tables = driver.find_elements(By.TAG_NAME, 'table')
+    if tables:
+        table = tables[0]
 
-            # Wait for the email to load (you might need to adjust the time based on the page loading speed)
-            time.sleep(2)
+        # Find all tbody elements inside the table
+        tbody_elements = table.find_elements(By.CLASS_NAME, 'zp_RFed0')
 
-            web_page = driver.page_source
-            soup = BeautifulSoup(web_page, 'html.parser')
+        # Loop through each tbody
+        for tbody in tbody_elements:
+            # Find the fourth td tag with class 'zp_aBhrx' inside the tbody
+            td_elements = tbody.find_elements(By.CLASS_NAME, 'zp_aBhrx')
 
-            # Scrape the email
-            emails = soup.find_all('div', class_='zp_JywRU')
-            emails_clean = [email.find('span', class_='zp_t08Bv').text.strip() for email in emails]
-            print(emails_clean)
+            # Check if there is a fourth td element
+            if len(td_elements) >= 4:
+                # Find the first button with type "button" inside the fourth td element
+                button = td_elements[3].find_element(By.CSS_SELECTOR, 'button[type="button"]')
 
-            # Go back to the previous page (you might need to adjust this based on your webpage structure)
-            button.click()
+                # Click the button
+                button.click()
+
+                # Wait for the email to load (you might need to adjust the time based on the page loading speed)
+                time.sleep(1)
+
+                web_page = driver.page_source
+                soup = BeautifulSoup(web_page, 'html.parser')
+
+                # Scrape the email
+                emails = soup.find_all('div', class_='zp_JywRU')
+                emails_clean = [email.find('span', class_='zp_t08Bv').text.strip() for email in emails]
+                all_emails.extend(emails_clean)
+                print(emails_clean)
+
+                # Go back to the previous page (you might need to adjust this based on your webpage structure)
+                button.click()
+                # driver.execute_script("window.history.go(-1)")
+
+        # If not the last page, click the next page button
+        if page_num < num_pages_to_scrape:
+            try:
+                next_page = driver.find_element(By.XPATH, next_page_button_xpath)
+                next_page.click()
+                time.sleep(2)  # Add a sleep to give the page time to load
+            except NoSuchElementException:
+                print("No more pages available")
+                break
+
+# Create a DataFrame from the list of emails
+df = pd.DataFrame({'Emails': all_emails})
+
+# Save the DataFrame to an Excel file
+excel_file_path = 'scraped_emails.xlsx'
+df.to_excel(excel_file_path, index=False)
 
 # Close the webdriver
 driver.quit()
+
+print(f"Scraped emails saved to {excel_file_path}")
