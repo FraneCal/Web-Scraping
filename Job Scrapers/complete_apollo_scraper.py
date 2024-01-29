@@ -8,7 +8,7 @@ import time
 import pandas as pd
 
 # URL of the webpage
-URL = "https://app.apollo.io/#/people?finderViewId=5b8050d050a3893c382e9360&contactLabelIds[]=65b56a60f697290001cd6572&prospectedByCurrentTeam[]=yes"
+URL = "YOUR APOLLO SAVED LIST LINK"
 
 # User agents for browser emulation
 user_agents = [
@@ -52,14 +52,20 @@ time.sleep(2)
 next_page_button_xpath = '//*[@id="main-app"]/div[2]/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div[4]/div/div/div/div/div[3]/div/div[2]/button[2]'
 
 # Number of pages you want to scrape
-num_pages_to_scrape = 1  # You can adjust this number based on your requirement
+num_pages_to_scrape = 4  # You can adjust this number based on your requirement
 
 # Variable to keep track of the page number
 page_num = 0
 
 # List to store scraped emails
-all_names = []
-all_emails = []
+all_data = {
+    'Name': [],
+    'Company Name': [],
+    'Phone Number': [],
+    'Number of Employees': [],
+    'Email': [],
+}
+
 
 while page_num < num_pages_to_scrape:
     # Increment the page number
@@ -73,19 +79,36 @@ while page_num < num_pages_to_scrape:
         # Find all tbody elements inside the table
         tbody_elements = table.find_elements(By.CLASS_NAME, 'zp_RFed0')
 
+        web_page = driver.page_source
+        soup = BeautifulSoup(web_page, 'html.parser')
+
+        # --------------------- FIRST AND LAST NAME --------------------- #
+        names = soup.find_all('div', class_='zp_xVJ20')
+        names_clean = [name.find('a').text.strip() for name in names]
+
+        # --------------------- COMPANY NAME --------------------- #
+        company_names = soup.find_all('div', class_='zp_J1j17')
+        company_names_clean = [name.find('a').text.strip() for name in company_names]
+
+        # --------------------- PHONE NUMBERS --------------------- #
+        phone_numbers = soup.find_all('span', class_='zp_lm1kV')
+        phone_numbers_clean = [phone.find('a') for phone in phone_numbers]
+        numbers = [phone.text.strip() for phone in phone_numbers_clean if phone is not None]
+
+        # --------------------- NUMBER OF EMPLOYEES --------------------- #
+        number_of_employees = soup.find_all('span', class_='zp_Y6y8d')
+        employees = [employee.text.strip() for employee in number_of_employees]
+        numbers_only = employees[2::3]
+
+        all_data['Name'].extend(names_clean)
+        all_data['Company Name'].extend(company_names_clean)
+        all_data['Phone Number'].extend(numbers)
+        all_data['Number of Employees'].extend(numbers_only)
+
         # Loop through each tbody
         for tbody in tbody_elements:
             # Find the fourth td tag with class 'zp_aBhrx' inside the tbody
             td_elements = tbody.find_elements(By.CLASS_NAME, 'zp_aBhrx')
-            if len(td_elements) >= 1:
-                web_page = driver.page_source
-                soup = BeautifulSoup(web_page, 'html.parser')
-
-                names = soup.find_all('div', class_='zp_xVJ20')
-                names_clean = [name.find('a').text.strip() for name in names]
-                all_names.extend(names_clean)
-                print(names_clean)
-
 
             # Check if there is a fourth td element
             if len(td_elements) >= 4:
@@ -104,9 +127,9 @@ while page_num < num_pages_to_scrape:
                 # Scrape the email
                 try:
                     emails = soup.find('div', class_='zp_JywRU').find('span', class_='zp_t08Bv').text.strip()
-                    all_emails.append(emails)
+                    all_data['Email'].append(emails)
                 except AttributeError:
-                    all_emails.append("Email not verified")
+                    all_data['Email'].append("Email not verified")
                 #emails_clean = [email.find('span', class_='zp_t08Bv').text.strip() for email in emails]
                 
                 #print(emails)
@@ -125,10 +148,10 @@ while page_num < num_pages_to_scrape:
                 break
 
 # Create a DataFrame from the list of emails
-df = pd.DataFrame({'Emails': all_emails})
+df = pd.DataFrame(all_data)
 
 # Save the DataFrame to an Excel file
-excel_file_path = 'scraped_emails.xlsx'
+excel_file_path = 'complete_data.xlsx'
 df.to_excel(excel_file_path, index=False)
 
 # Close the webdriver
