@@ -8,12 +8,11 @@ import time
 import pandas as pd
 
 # URL of the webpage
-URL = "https://app.apollo.io/#/people?finderViewId=5b8050d050a3893c382e9360&contactLabelIds[]=65b56a60f697290001cd6572&prospectedByCurrentTeam[]=yes"
+URL = "YOUR APOLLO SAVED LIST LINK"
 
 # User agents for browser emulation
 user_agents = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36",
-    # Add other user agents as needed
 ]
 
 # Setting up the WebDriver
@@ -29,11 +28,11 @@ time.sleep(10)  # Wait for the page to load
 # Logging in
 email_input = driver.find_element(By.NAME, 'email')
 email_input.click()
-email_input.send_keys('fcalus00@fesb.hr')
+email_input.send_keys('YOUR EMAIL')
 
 password_input = driver.find_element(By.NAME, 'password')
 password_input.click()
-password_input.send_keys('autotelefon23')
+password_input.send_keys('YOUR PASSWORD')
 
 time.sleep(1)
 
@@ -118,7 +117,6 @@ while page_num < num_pages_to_scrape:
                 # Click the button
                 button.click()
 
-                # Wait for the email to load (you might need to adjust the time based on the page loading speed)
                 time.sleep(1)
 
                 web_page = driver.page_source
@@ -130,9 +128,6 @@ while page_num < num_pages_to_scrape:
                     all_data['Email'].append(emails)
                 except AttributeError:
                     all_data['Email'].append("Email not verified")
-                #emails_clean = [email.find('span', class_='zp_t08Bv').text.strip() for email in emails]
-                
-                #print(emails)
 
                 # Go back to the previous page
                 button.click()
