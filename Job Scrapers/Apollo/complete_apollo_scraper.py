@@ -3,6 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.chrome.options import Options
 import random
 import time
 import pandas as pd
@@ -17,8 +18,9 @@ user_agents = [
 
 # Setting up the WebDriver
 service = Service()
-options = webdriver.ChromeOptions()
+options = Options()
 options.add_argument(f"user-agent={random.choice(user_agents)}")
+options.add_argument("--headless")  # Add this line for headless mode
 driver = webdriver.Chrome(service=service, options=options)
 
 # Opening the webpage
@@ -65,7 +67,7 @@ all_data = {
     'Email': [],
 }
 
-
+print("Starting to scrape! :)")
 while page_num < num_pages_to_scrape:
     # Increment the page number
     page_num += 1
@@ -138,6 +140,7 @@ while page_num < num_pages_to_scrape:
                 next_page = driver.find_element(By.XPATH, next_page_button_xpath)
                 next_page.click()
                 time.sleep(2)  # Add a sleep to give the page time to load
+                print('Everything is still as planned. :)')
             except NoSuchElementException:
                 print("No more pages available")
                 break
