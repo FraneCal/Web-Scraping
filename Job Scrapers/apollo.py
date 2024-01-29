@@ -10,7 +10,7 @@ import time
 import pandas as pd
 
 # URL of the webpage
-URL = "https://app.apollo.io/#/people?finderViewId=5b6dfc5a73f47568b2e5f11c&contactLabelIds[]=65b56a60f697290001cd6572&prospectedByCurrentTeam[]=yes"
+URL = "YOUR APOLLO LINK"
 
 # User agents for browser emulation
 user_agents = [
