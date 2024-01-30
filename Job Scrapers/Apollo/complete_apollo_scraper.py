@@ -53,7 +53,8 @@ time.sleep(2)
 next_page_button_xpath = '//*[@id="main-app"]/div[2]/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div[4]/div/div/div/div/div[3]/div/div[2]/button[2]'
 
 # Number of pages you want to scrape
-num_pages_to_scrape = 4  # You can adjust this number based on your requirement
+# e.g. 218/25 = 8.72, round to next higher number, in this case 9
+num_pages_to_scrape = "ADJUSt"  # You can adjust this number based on your requirement
 
 # Variable to keep track of the page number
 page_num = 0
@@ -61,6 +62,7 @@ page_num = 0
 # List to store scraped emails
 all_data = {
     'Name': [],
+    'Job role': [],
     'Company Name': [],
     'Phone Number': [],
     'Number of Employees': [],
@@ -87,6 +89,11 @@ while page_num < num_pages_to_scrape:
         names = soup.find_all('div', class_='zp_xVJ20')
         names_clean = [name.find('a').text.strip() for name in names]
 
+        # --------------------- TITLE --------------------- #
+        titles = soup.find_all('span', class_='zp_Y6y8d')
+        titles_list = [title.text.strip() for title in titles if title is not None]
+        titles_clean = titles_list[::3]
+
         # --------------------- COMPANY NAME --------------------- #
         company_names = soup.find_all('div', class_='zp_J1j17')
         company_names_clean = [name.find('a').text.strip() for name in company_names]
@@ -102,6 +109,7 @@ while page_num < num_pages_to_scrape:
         numbers_only = employees[2::3]
 
         all_data['Name'].extend(names_clean)
+        all_data['Job role'].extend(titles_clean)
         all_data['Company Name'].extend(company_names_clean)
         all_data['Phone Number'].extend(numbers)
         all_data['Number of Employees'].extend(numbers_only)
@@ -140,7 +148,7 @@ while page_num < num_pages_to_scrape:
                 next_page = driver.find_element(By.XPATH, next_page_button_xpath)
                 next_page.click()
                 time.sleep(2)  # Add a sleep to give the page time to load
-                print(f'Everything is still going as planned. Currently printing {page_num}/{num_pages_to_scrape}.')
+                print(f'Everything is still as planned. Currently scraping {page_num}/{num_pages_to_scrape}. :)')
             except NoSuchElementException:
                 print("No more pages available")
                 break
