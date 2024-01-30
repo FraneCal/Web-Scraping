@@ -140,7 +140,7 @@ while page_num < num_pages_to_scrape:
                 next_page = driver.find_element(By.XPATH, next_page_button_xpath)
                 next_page.click()
                 time.sleep(2)  # Add a sleep to give the page time to load
-                print('Everything is still as planned. :)')
+                print(f'Everything is still going as planned. Currently printing {page_num}/{num_pages_to_scrape}.')
             except NoSuchElementException:
                 print("No more pages available")
                 break
