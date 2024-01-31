@@ -7,9 +7,10 @@ from selenium.webdriver.chrome.options import Options
 import random
 import time
 import pandas as pd
+import os
 
 # URL of the webpage
-URL = "https://app.apollo.io/?utm_campaign=Transactional%3A+Account+Activation&utm_medium=transactional_message&utm_source=cio#/people?finderViewId=5b8050d050a3893c382e9360&contactLabelIds[]=65ba12bbb6332b0001766e87&prospectedByCurrentTeam[]=ye"
+URL = "YOUR APOLLO SAVED LIST LINK"
 
 # User agents for browser emulation
 user_agents = [
@@ -20,7 +21,7 @@ user_agents = [
 service = Service()
 options = Options()
 options.add_argument(f"user-agent={random.choice(user_agents)}")
-#options.add_argument("--headless")  # Add this line for headless mode
+# options.add_argument("--headless")  # Add this line for headless mode
 driver = webdriver.Chrome(service=service, options=options)
 
 # Opening the webpage
@@ -38,7 +39,8 @@ password_input.send_keys('YOUR PASSWORD')
 
 time.sleep(1)
 
-log_in_button = driver.find_element(By.XPATH, '//*[@id="provider-mounter"]/div/div[2]/div[1]/div/div[2]/div/div[2]/div/form/div[7]/button')
+log_in_button = driver.find_element(By.XPATH,
+                                    '//*[@id="provider-mounter"]/div/div[2]/div[1]/div/div[2]/div/div[2]/div/form/div[7]/button')
 log_in_button.click()
 
 time.sleep(5)
@@ -47,7 +49,7 @@ time.sleep(5)
 next_page_button_xpath = '//*[@id="main-app"]/div[2]/div/div/div/div[2]/div/div[2]/div/div/div/div/div/div[2]/div/div[4]/div/div/div/div/div[3]/div/div[2]/button[2]'
 
 # Number of pages you want to scrape
-num_pages_to_scrape = 10  # You can adjust this number based on your requirement
+num_pages_to_scrape = 4  # You can adjust this number based on your requirement
 
 # Variable to keep track of the page number
 page_num = 0
@@ -66,7 +68,7 @@ print("Starting to scrape! :)")
 while page_num < num_pages_to_scrape:
     # Increment the page number
     page_num += 1
-    
+
     web_page = driver.page_source
     soup = BeautifulSoup(web_page, 'html.parser')
 
@@ -97,7 +99,6 @@ while page_num < num_pages_to_scrape:
     emails = soup.find_all('div', class_='zp_jcL6a')
     emails_list = [email.find('a', class_='zp-link zp_OotKe zp_Iu6Pf').text.strip() if email.find('a', class_='zp-link zp_OotKe zp_Iu6Pf') is not None else '' for email in emails]
 
-
     all_data['Name'].extend(names_clean)
     all_data['Job role'].extend(titles_clean)
     all_data['Company Name'].extend(company_names_clean)
@@ -114,13 +115,24 @@ while page_num < num_pages_to_scrape:
         except:
             print("No button to click.")
 
-
 # Create a DataFrame from the list of emails
 df = pd.DataFrame(all_data)
 
 # Save the DataFrame to an Excel file
 excel_file_path = 'complete_data.xlsx'
-df.to_excel(excel_file_path, index=False)
+
+if os.path.isfile(excel_file_path):
+    # If the file already exists, load the existing data
+    existing_df = pd.read_excel(excel_file_path)
+
+    # Append the new data to the existing DataFrame
+    existing_df = existing_df._append(df, ignore_index=True)
+
+    # Save the combined DataFrame back to the same file
+    existing_df.to_excel(excel_file_path, index=False)
+else:
+    # If the file doesn't exist, save the DataFrame as a new file
+    df.to_excel(excel_file_path, index=False)
 
 # Close the webdriver
 driver.quit()
