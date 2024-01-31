@@ -54,7 +54,7 @@ next_page_button_xpath = '//*[@id="main-app"]/div[2]/div/div/div[2]/div[2]/div/d
 
 # Number of pages you want to scrape
 # e.g. 218/25 = 8.72, round to next higher number, in this case 9
-num_pages_to_scrape = "ADJUSt"  # You can adjust this number based on your requirement
+num_pages_to_scrape = 3  # You can adjust this number based on your requirement
 
 # Variable to keep track of the page number
 page_num = 0
