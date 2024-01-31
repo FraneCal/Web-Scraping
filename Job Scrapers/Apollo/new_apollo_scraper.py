@@ -105,13 +105,6 @@ while page_num < num_pages_to_scrape:
     all_data['Number of Employees'].extend(numbers_only)
     all_data['Email'].extend(emails_list)
 
-    print(len(names_clean))
-    print(len(titles_clean))
-    print(len(company_names_clean))
-    print(len(numbers_only))
-    print(len(emails_list))
-
-
     # If not the last page, click the next page button
     if page_num < num_pages_to_scrape:
         try:
