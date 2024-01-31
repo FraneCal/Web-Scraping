@@ -101,7 +101,6 @@ while page_num < num_pages_to_scrape:
     all_data['Name'].extend(names_clean)
     all_data['Job role'].extend(titles_clean)
     all_data['Company Name'].extend(company_names_clean)
-    #all_data['Phone Number'].extend(numbers)
     all_data['Number of Employees'].extend(numbers_only)
     all_data['Email'].extend(emails_list)
 
