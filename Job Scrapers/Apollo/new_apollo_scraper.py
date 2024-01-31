@@ -47,7 +47,7 @@ time.sleep(5)
 next_page_button_xpath = '//*[@id="main-app"]/div[2]/div/div/div/div[2]/div/div[2]/div/div/div/div/div/div[2]/div/div[4]/div/div/div/div/div[3]/div/div[2]/button[2]'
 
 # Number of pages you want to scrape
-num_pages_to_scrape = 21  # You can adjust this number based on your requirement
+num_pages_to_scrape = 10  # You can adjust this number based on your requirement
 
 # Variable to keep track of the page number
 page_num = 0
@@ -66,7 +66,7 @@ print("Starting to scrape! :)")
 while page_num < num_pages_to_scrape:
     # Increment the page number
     page_num += 1
-
+    
     web_page = driver.page_source
     soup = BeautifulSoup(web_page, 'html.parser')
 
@@ -95,7 +95,8 @@ while page_num < num_pages_to_scrape:
 
     # --------------------- EMAILS --------------------- #
     emails = soup.find_all('div', class_='zp_jcL6a')
-    emails_list = [email.find('a', class_='zp-link zp_OotKe zp_Iu6Pf').text.strip() for email in emails]
+    emails_list = [email.find('a', class_='zp-link zp_OotKe zp_Iu6Pf').text.strip() if email.find('a', class_='zp-link zp_OotKe zp_Iu6Pf') is not None else '' for email in emails]
+
 
     all_data['Name'].extend(names_clean)
     all_data['Job role'].extend(titles_clean)
@@ -111,16 +112,16 @@ while page_num < num_pages_to_scrape:
     print(len(emails_list))
 
 
-        # If not the last page, click the next page button
+    # If not the last page, click the next page button
     if page_num < num_pages_to_scrape:
         try:
-            next_page = driver.find_element(By.CLASS_NAME, 'zp-button zp_zUY3r zp_MCSwB zp_xCVC8')
+            next_page = driver.find_element(By.XPATH, next_page_button_xpath)
             next_page.click()
             time.sleep(3)  # Add a sleep to give the page time to load
             print(f'Everything is still going as planned. Currently printing {page_num}/{num_pages_to_scrape}.')
-        except NoSuchElementException:
-            print("No more pages available")
-        
+        except:
+            print("No button to click.")
+
 
 # Create a DataFrame from the list of emails
 df = pd.DataFrame(all_data)
