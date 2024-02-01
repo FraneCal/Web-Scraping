@@ -7,6 +7,7 @@ from selenium.webdriver.chrome.options import Options
 import random
 import time
 import pandas as pd
+import os
 
 # URL of the webpage
 URL = "YOUR APOLLO SAVED LIST LINK"
@@ -20,7 +21,7 @@ user_agents = [
 service = Service()
 options = Options()
 options.add_argument(f"user-agent={random.choice(user_agents)}")
-options.add_argument("--headless")  # Add this line for headless mode
+#options.add_argument("--headless")  # Add this line for headless mode
 driver = webdriver.Chrome(service=service, options=options)
 
 # Opening the webpage
@@ -30,7 +31,7 @@ time.sleep(10)  # Wait for the page to load
 # Logging in
 email_input = driver.find_element(By.NAME, 'email')
 email_input.click()
-email_input.send_keys('YOUR EMAIL')
+email_input.send_keys('YOUR USERNAME')
 
 password_input = driver.find_element(By.NAME, 'password')
 password_input.click()
@@ -43,17 +44,10 @@ log_in_button.click()
 
 time.sleep(5)
 
-# Hiding filters
-hide_filters = driver.find_element(By.XPATH, '//*[@id="main-app"]/div[2]/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div[2]/div/div[2]/div/span/button/div/div/span')
-hide_filters.click()
-
-time.sleep(2)
-
 # XPath for the next page button
-next_page_button_xpath = '//*[@id="main-app"]/div[2]/div/div/div[2]/div[2]/div/div/div/div/div/div/div/div/div/div[4]/div/div/div/div/div[3]/div/div[2]/button[2]'
+next_page_button_xpath = '//*[@id="main-app"]/div[2]/div/div/div/div[2]/div/div[2]/div/div/div/div/div/div[2]/div/div[4]/div/div/div/div/div[3]/div/div[2]/button[2]'
 
 # Number of pages you want to scrape
-# e.g. 218/25 = 8.72, round to next higher number, in this case 9
 num_pages_to_scrape = 3  # You can adjust this number based on your requirement
 
 # Variable to keep track of the page number
@@ -141,6 +135,27 @@ while page_num < num_pages_to_scrape:
 
                 # Go back to the previous page
                 button.click()
+        
+        # Create a DataFrame from the list of emails
+        df = pd.DataFrame(all_data)
+
+        # Save the DataFrame to an Excel file
+        excel_file_path = 'complete_data.xlsx'
+
+        # If the file already exists, load the existing data
+        if os.path.isfile(excel_file_path):
+            existing_df = pd.read_excel(excel_file_path)
+
+        # Append the new data to the existing DataFrame
+            existing_df = existing_df._append(df, ignore_index=True)
+
+        # Save the combined DataFrame back to the same file
+            existing_df.to_excel(excel_file_path, index=False)
+        else:
+        # If the file doesn't exist, save the DataFrame as a new file
+            df.to_excel(excel_file_path, index=False)
+
+        print(f'Data from page {page_num} successfully saved.')
 
         # If not the last page, click the next page button
         if page_num < num_pages_to_scrape:
@@ -148,19 +163,13 @@ while page_num < num_pages_to_scrape:
                 next_page = driver.find_element(By.XPATH, next_page_button_xpath)
                 next_page.click()
                 time.sleep(2)  # Add a sleep to give the page time to load
-                print(f'Everything is still as planned. Currently scraping {page_num}/{num_pages_to_scrape}. :)')
+                print(f'Everything is still as planned. :)')
             except NoSuchElementException:
                 print("No more pages available")
                 break
 
-# Create a DataFrame from the list of emails
-df = pd.DataFrame(all_data)
-
-# Save the DataFrame to an Excel file
-excel_file_path = 'complete_data.xlsx'
-df.to_excel(excel_file_path, index=False)
 
 # Close the webdriver
 driver.quit()
 
-print(f"Scraped emails saved to {excel_file_path}")
+print(f"Scraped completed.")
