@@ -171,4 +171,4 @@ while page_num < num_pages_to_scrape:
 # Close the webdriver
 driver.quit()
 
-print(f"Scraped completed.")
+print(f"Scraping completed.")
