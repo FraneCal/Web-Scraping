@@ -1,12 +1,12 @@
 # ----------------------- SPAIN ----------------------- #
 
-https://www.infojobs.net/
 https://es.indeed.com/ ----------------------- DONE 
 https://www.infoempleo.com/ ----------------------- DONE (1 job only)
 https://www.adecco.es/encuentra-trabajo ----------------------- DONE (0 jobs)
 https://www.oficinaempleo.com/ ----------------------- DONE 
 https://www.trabajos.com/ ----------------------- DONE (2 jobs)
 
+https://www.infojobs.net/ ----------------------- ONGOING (needs to be scraped)
 https://www.monster.es/ ----------------------- ONGOING (needs to be scraped)
 https://www.opcionempleo.com/ ----------------------- ONGOING (needs to be scraped)
 https://es.jobzil.la/ ----------------------- ONGOING (needs to be scraped)
