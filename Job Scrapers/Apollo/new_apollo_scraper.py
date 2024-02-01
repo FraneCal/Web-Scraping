@@ -39,8 +39,7 @@ password_input.send_keys('YOUR PASSWORD')
 
 time.sleep(1)
 
-log_in_button = driver.find_element(By.XPATH,
-                                    '//*[@id="provider-mounter"]/div/div[2]/div[1]/div/div[2]/div/div[2]/div/form/div[7]/button')
+log_in_button = driver.find_element(By.XPATH,'//*[@id="provider-mounter"]/div/div[2]/div[1]/div/div[2]/div/div[2]/div/form/div[7]/button')
 log_in_button.click()
 
 time.sleep(5)
