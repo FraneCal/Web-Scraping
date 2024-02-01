@@ -168,7 +168,6 @@ while page_num < num_pages_to_scrape:
                 print("No more pages available")
                 break
 
-
 # Close the webdriver
 driver.quit()
 
