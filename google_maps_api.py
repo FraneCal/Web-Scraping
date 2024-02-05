@@ -4,6 +4,38 @@ import pandas as pd
 import json
 from concurrent.futures import ThreadPoolExecutor
 
+
+def get_facebook_page_link(api_key, query):
+    base_url = "https://graph.facebook.com/v14.0"
+    access_token = "YOUR FACEBOOK GRAPH API KEY"
+
+    search_url = f"{base_url}/search"
+    search_params = {
+        "q": query,
+        "type": "page",
+        "access_token": access_token,
+    }
+
+    print(f"Facebook Graph API Request: {search_url}?{search_params}")
+
+    response = requests.get(search_url, params=search_params)
+    result_data = response.json().get("data", [])
+
+    print(f"Facebook Graph API Response: {response.json()}")
+
+    if result_data:
+        first_result = result_data[0]
+        page_link = first_result.get("link")
+
+        if page_link:
+            return page_link
+        else:
+            print(f"Error: Facebook Page link not found in the result for query: {query}")
+    else:
+        print(f"Error: No data found in the Facebook Graph API response for query: {query}")
+
+    return None
+
 def get_place_ids(api_key, query):
     """
     Retrieve place IDs using the Google Places Text Search API.
@@ -41,7 +73,7 @@ def get_place_details(api_key, place_id):
     base_url = "https://maps.googleapis.com/maps/api/place/details/json"
     params = {
         "place_id": place_id,
-        "fields": "name,formatted_address,formatted_phone_number,user_ratings_total,rating,reviews,website",
+        "fields": "name,formatted_address,formatted_phone_number,user_ratings_total,rating,reviews,website,geometry,photos,place_id",
         "key": api_key,
     }
 
@@ -50,18 +82,25 @@ def get_place_details(api_key, place_id):
 
     return place_details
 
-def fetch_details_async(api_key, place_ids):
+def fetch_details_async(api_key, place_ids, keyword, location):
     """
     Fetch detailed information about multiple places asynchronously.
 
     Parameters:
     - api_key (str): Your Google Maps API key.
     - place_ids (list): List of place IDs.
+    - keyword (str): The keyword entered by the user.
+    - location (str): The location entered by the user.
 
     Returns:
     - list: List of dictionaries containing detailed information about each place.
     """
     data = []
+
+    keyword = keyword.title()
+    location = location.title()
+
+    facebook_page_link = get_facebook_page_link(api_key, f"{keyword} {location}")
 
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(get_place_details, api_key, place_id) for place_id in place_ids]
@@ -70,10 +109,25 @@ def fetch_details_async(api_key, place_ids):
             place_details = future.result()
             name = place_details.get("name", "N/A")
             address = place_details.get("formatted_address", "N/A")
-            phone_number = place_details.get("formatted_phone_number", "N/A")
-            user_ratings_total = place_details.get("user_ratings_total", "N/A")
-            rating = place_details.get("rating", "N/A")
             website = place_details.get("website", "N/A")
+            phone_number = place_details.get("formatted_phone_number", "N/A")
+            rating = place_details.get("rating", "N/A")
+            user_ratings_total = place_details.get("user_ratings_total", "N/A")
+            photos = [f"https://maps.googleapis.com/maps/api/place/photo?key={api_key}&photoreference={photo['photo_reference']}&maxwidth=400" for photo in place_details.get("photos", [])]
+            latitude = place_details.get("geometry", {}).get("location", {}).get("lat", "N/A")
+            longitude = place_details.get("geometry", {}).get("location", {}).get("lng", "N/A")
+            place_id = place_details.get("place_id", "N/A")
+            email = place_details.get("email", "N/A")
+            instagram = place_details.get("instagram", "N/A")
+            twitter = place_details.get("twitter", "N/A")
+            linkedin = place_details.get("linkedin", "N/A")
+            youtube = place_details.get("youtube", "N/A")
+            business_hours = place_details.get("opening_hours", {}).get("weekday_text", "N/A")
+            business_page_link = f"https://www.google.com/maps/place/?q=place_id:{place_id}"
+
+            # Use user-entered keyword and location
+            keyword = keyword.title()
+            location = location.title()
 
             data.append({
                 "Name": name,
@@ -82,11 +136,21 @@ def fetch_details_async(api_key, place_ids):
                 "Website": website,
                 "Number of Reviews": user_ratings_total,
                 "Total rating": rating,
+                "Photos": photos,
+                "Latitude": latitude,
+                "Longitude": longitude,
+                "Place ID": place_id,
+                "Email": email,
+                "Facebook": facebook_page_link,
+                "Instagram": instagram,
+                "Twitter": twitter,
+                "LinkedIn": linkedin,
+                "YouTube": youtube,
+                "Business Hours": business_hours,
+                "Business Page Link": business_page_link,
+                "Keyword": keyword,
+                "Location": location,
             })
-
-    for info in data:
-        #print(info)
-        pass
 
     return data
 
@@ -101,6 +165,10 @@ def save_to_existing_file(data, query, output_format):
     """
     index = 1
     query_filename = "_".join(query.split())
+    
+    # Replace comma with underscore in the filename
+    query_filename = query_filename.replace(',', '_')
+    
     while True:
         filename = f"{query_filename}{f'({index})' if index > 1 else ''}"
         full_filename = f"{filename}.{output_format}"
@@ -135,16 +203,20 @@ def main():
         if query.lower() == 'q':
             break
 
+        # Extract keyword and location from the query
+        keyword, _, location = query.partition(",")
+        keyword = keyword.strip()
+        location = location.strip()
+
         api_key = "YOUR GOOGLE MAPS API KEY"
         place_ids = get_place_ids(api_key, query)
 
         if place_ids:
-            data = fetch_details_async(api_key, place_ids)
+            data = fetch_details_async(api_key, place_ids, keyword, location)
 
             output_format = input("Choose the output format (CSV, JSON, XLSX): ").lower()
 
             save_to_existing_file(data, query, output_format)
-            #print("Successfully saved")  # Print success message
 
         else:
             print("No data to export.")
