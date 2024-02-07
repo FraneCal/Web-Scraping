@@ -78,7 +78,6 @@ while page_num < num_pages_to_scrape:
     # --------------------- TITLE --------------------- #
     titles = soup.find_all('span', class_='zp_Y6y8d')
     titles_list = [titles[i].text.strip() for i in range(0, len(titles), 2) if titles[i] is not None]
-    #titles_clean = titles_list[::3]
 
     # --------------------- COMPANY NAME --------------------- #
     company_names = soup.find_all('div', class_='zp_J1j17')
@@ -92,7 +91,6 @@ while page_num < num_pages_to_scrape:
     # --------------------- NUMBER OF EMPLOYEES --------------------- #
     number_of_employees = soup.find_all('span', class_='zp_Y6y8d')
     numbers_list = [employee.text.strip() for employee in number_of_employees[1::2] if employee is not None]
-    #numbers_only = employees[2::3]
 
     # --------------------- EMAILS --------------------- #
     emails = soup.find_all('div', class_='zp_jcL6a')
