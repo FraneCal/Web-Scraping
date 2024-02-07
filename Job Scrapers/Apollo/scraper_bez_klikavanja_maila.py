@@ -48,7 +48,7 @@ time.sleep(5)
 next_page_button_xpath = '//*[@id="main-app"]/div[2]/div/div/div/div[2]/div/div[2]/div/div/div/div/div/div[2]/div/div[4]/div/div/div/div/div[3]/div/div[2]/button[2]'
 
 # Number of pages you want to scrape
-num_pages_to_scrape = 4  # You can adjust this number based on your requirement
+num_pages_to_scrape = 5  # You can adjust this number based on your requirement
 
 # Variable to keep track of the page number
 page_num = 0
@@ -77,8 +77,8 @@ while page_num < num_pages_to_scrape:
 
     # --------------------- TITLE --------------------- #
     titles = soup.find_all('span', class_='zp_Y6y8d')
-    titles_list = [title.text.strip() for title in titles if title is not None]
-    titles_clean = titles_list[::3]
+    titles_list = [titles[i].text.strip() for i in range(0, len(titles), 2) if titles[i] is not None]
+    #titles_clean = titles_list[::3]
 
     # --------------------- COMPANY NAME --------------------- #
     company_names = soup.find_all('div', class_='zp_J1j17')
@@ -91,17 +91,17 @@ while page_num < num_pages_to_scrape:
 
     # --------------------- NUMBER OF EMPLOYEES --------------------- #
     number_of_employees = soup.find_all('span', class_='zp_Y6y8d')
-    employees = [employee.text.strip() for employee in number_of_employees]
-    numbers_only = employees[2::3]
+    numbers_list = [employee.text.strip() for employee in number_of_employees[1::2] if employee is not None]
+    #numbers_only = employees[2::3]
 
     # --------------------- EMAILS --------------------- #
     emails = soup.find_all('div', class_='zp_jcL6a')
     emails_list = [email.find('a', class_='zp-link zp_OotKe zp_Iu6Pf').text.strip() if email.find('a', class_='zp-link zp_OotKe zp_Iu6Pf') is not None else '' for email in emails]
 
     all_data['Name'].extend(names_clean)
-    all_data['Job role'].extend(titles_clean)
+    all_data['Job role'].extend(titles_list)
     all_data['Company Name'].extend(company_names_clean)
-    all_data['Number of Employees'].extend(numbers_only)
+    all_data['Number of Employees'].extend(numbers_list)
     all_data['Email'].extend(emails_list)
 
     # If not the last page, click the next page button
@@ -137,3 +137,28 @@ else:
 driver.quit()
 
 print(f"Scraped emails saved to {excel_file_path}")
+
+# Removing the duplicates
+def remove_duplicates(input_file, output_file):
+    # Read Excel file into a DataFrame
+    df = pd.read_excel(input_file)
+
+    # Check if there are duplicate rows
+    if df.duplicated().any():
+        # Identify and remove duplicate rows
+        df_no_duplicates = df.drop_duplicates()
+
+        # Save the modified DataFrame to a new Excel file
+        df_no_duplicates.to_excel(output_file, index=False)
+
+        print("Duplicate rows removed and saved to", output_file)
+    else:
+        print("No duplicate rows found. Data remains unchanged.")
+
+if __name__ == "__main__":
+    # Specify the input and output file paths
+    input_file_path = "complete_data.xlsx"  # Replace with your input file path
+    output_file_path = "output_file.xlsx"  # Replace with your desired output file path
+
+    # Call the function to remove duplicates
+    remove_duplicates(input_file_path, output_file_path)
