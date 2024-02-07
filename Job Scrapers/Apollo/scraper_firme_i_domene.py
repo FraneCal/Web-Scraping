@@ -47,7 +47,7 @@ time.sleep(5)
 next_page_button_xpath = '//*[@id="main-app"]/div[2]/div/div/div/div[2]/div/div[2]/div/div/div/div/div/div[2]/div/div[4]/div/div/div/div/div[3]/div/div[2]/button[2]'
 
 # Number of pages you want to scrape
-num_pages_to_scrape = 2  # You can adjust this number based on your requirement
+num_pages_to_scrape = 14  # You can adjust this number based on your requirement
 
 # Variable to keep track of the page number
 page_num = 0
@@ -77,27 +77,8 @@ while page_num < num_pages_to_scrape:
 
     all_data['Company name'].extend(company_names_clean)
     all_data['Domain'].extend(domains_clean)
-  
-    # Create a DataFrame from the list of emails
-    df = pd.DataFrame(all_data)
 
-    # Save the DataFrame to an Excel file
-    excel_file_path = 'complete_data.xlsx'
-
-    # If the file already exists, load the existing data
-    if os.path.isfile(excel_file_path):
-        existing_df = pd.read_excel(excel_file_path)
-
-    # Append the new data to the existing DataFrame
-        existing_df = existing_df._append(df, ignore_index=True)
-
-    # Save the combined DataFrame back to the same file
-        existing_df.to_excel(excel_file_path, index=False)
-    else:
-    # If the file doesn't exist, save the DataFrame as a new file
-        df.to_excel(excel_file_path, index=False)
-
-    print(f'Data from page {page_num} successfully saved.')
+    #print(f'Data from page {page_num} successfully saved.')
 
     # If not the last page, click the next page button
     if page_num < num_pages_to_scrape:
@@ -112,5 +93,24 @@ while page_num < num_pages_to_scrape:
 
 # Close the webdriver
 driver.quit()
+
+# Create a DataFrame from the list of emails
+df = pd.DataFrame(all_data)
+
+# Save the DataFrame to an Excel file
+excel_file_path = 'complete_data.xlsx'
+
+# If the file already exists, load the existing data
+if os.path.isfile(excel_file_path):
+    existing_df = pd.read_excel(excel_file_path)
+
+# Append the new data to the existing DataFrame
+    existing_df = existing_df._append(df, ignore_index=True)
+
+# Save the combined DataFrame back to the same file
+    existing_df.to_excel(excel_file_path, index=False)
+else:
+# If the file doesn't exist, save the DataFrame as a new file
+    df.to_excel(excel_file_path, index=False)
 
 print(f"Scraped emails saved to {excel_file_path}")
