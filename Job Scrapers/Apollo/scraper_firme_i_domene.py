@@ -10,7 +10,7 @@ import pandas as pd
 import os
 
 # URL of the webpage
-URL = "https://app.apollo.io/#/companies?finderViewId=5a205be49a57e40c095e1d60&accountLabelIds[]=65c119835f8ff90001756d74&prospectedByCurrentTeam[]=yes"
+URL = "YOUR APOLLO SAVED LIST LINK"
 
 # User agents for browser emulation
 user_agents = [
@@ -30,11 +30,11 @@ time.sleep(10)  # Wait for the page to load
 # Logging in
 email_input = driver.find_element(By.NAME, 'email')
 email_input.click()
-email_input.send_keys('jerri@mauludev.com')
+email_input.send_keys('YOUR EMAIL')
 
 password_input = driver.find_element(By.NAME, 'password')
 password_input.click()
-password_input.send_keys('WaL5HhB[N-PE_wKf')
+password_input.send_keys('YOUR PASSWORD')
 
 time.sleep(1)
 
