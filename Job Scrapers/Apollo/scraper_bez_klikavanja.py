@@ -9,154 +9,136 @@ import time
 import pandas as pd
 import os
 
-# URL of the webpage
-URL = "YOUR APOLLO SAVED LIST LINK"
+def setup_webdriver():
+    service = Service()
+    options = Options()
+    options.add_argument(f"user-agent={random.choice(user_agents)}")
+    # options.add_argument("--headless")  # Add this line for headless mode
+    driver = webdriver.Chrome(service=service, options=options)
+    return driver
 
-# User agents for browser emulation
-user_agents = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36",
-]
+def login(driver, email, password):
+    driver.get(URL)
+    time.sleep(10)  # Wait for the page to load
 
-# Setting up the WebDriver
-service = Service()
-options = Options()
-options.add_argument(f"user-agent={random.choice(user_agents)}")
-# options.add_argument("--headless")  # Add this line for headless mode
-driver = webdriver.Chrome(service=service, options=options)
+    email_input = driver.find_element(By.NAME, 'email')
+    email_input.click()
+    email_input.send_keys(email)
 
-# Opening the webpage
-driver.get(URL)
-time.sleep(10)  # Wait for the page to load
+    password_input = driver.find_element(By.NAME, 'password')
+    password_input.click()
+    password_input.send_keys(password)
 
-# Logging in
-email_input = driver.find_element(By.NAME, 'email')
-email_input.click()
-email_input.send_keys('YOUR EMAIL')
+    time.sleep(1)
 
-password_input = driver.find_element(By.NAME, 'password')
-password_input.click()
-password_input.send_keys('YOUR PASSWORD')
+    log_in_button = driver.find_element(By.XPATH, '//*[@id="provider-mounter"]/div/div[2]/div[1]/div/div[2]/div/div[2]/div/form/div[4]/button')
+    log_in_button.click()
 
-time.sleep(1)
+    time.sleep(5)
 
-log_in_button = driver.find_element(By.XPATH,'//*[@id="provider-mounter"]/div/div[2]/div[1]/div/div[2]/div/div[2]/div/form/div[7]/button')
-log_in_button.click()
+def scrape_data(driver, num_pages_to_scrape):
+    page_num = 0
+    all_data = {
+        'Name': [],
+        'Job role': [],
+        'Company Name': [],
+        'Number of Employees': [],
+        'Email': [],
+    }
 
-time.sleep(5)
+    print("Starting to scrape! :)")
 
-# XPath for the next page button
-next_page_button_xpath = '//*[@id="main-app"]/div[2]/div/div/div/div[2]/div/div[2]/div/div/div/div/div/div[2]/div/div[4]/div/div/div/div/div[3]/div/div[2]/button[2]'
+    while page_num < num_pages_to_scrape:
+        page_num += 1
 
-# Number of pages you want to scrape
-num_pages_to_scrape = 5  # You can adjust this number based on your requirement
+        web_page = driver.page_source
+        soup = BeautifulSoup(web_page, 'html.parser')
 
-# Variable to keep track of the page number
-page_num = 0
+        # --------------------- FIRST AND LAST NAME --------------------- #
+        names = soup.find_all('div', class_='zp_xVJ20')
+        names_clean = [name.find('a').text.strip() for name in names]
 
-# List to store scraped emails
-all_data = {
-    'Name': [],
-    'Job role': [],
-    'Company Name': [],
-    'Number of Employees': [],
-    'Email': [],
-}
+        # --------------------- TITLE --------------------- #
+        titles = soup.find_all('span', class_='zp_Y6y8d')
+        titles_list = [titles[i].text.strip() for i in range(0, len(titles), 2) if titles[i] is not None]
 
-print("Starting to scrape! :)")
+        # --------------------- COMPANY NAME --------------------- #
+        company_names = soup.find_all('div', class_='zp_J1j17')
+        company_names_clean = [name.find('a').text.strip() for name in company_names]
 
-while page_num < num_pages_to_scrape:
-    # Increment the page number
-    page_num += 1
+        # --------------------- PHONE NUMBERS --------------------- #
+        phone_numbers = soup.find_all('span', class_='zp_lm1kV')
+        phone_numbers_clean = [phone.find('a') for phone in phone_numbers]
+        numbers = [phone.text.strip() for phone in phone_numbers_clean if phone is not None]
 
-    web_page = driver.page_source
-    soup = BeautifulSoup(web_page, 'html.parser')
+        # --------------------- NUMBER OF EMPLOYEES --------------------- #
+        number_of_employees = soup.find_all('span', class_='zp_Y6y8d')
+        numbers_list = [employee.text.strip() for employee in number_of_employees[1::2] if employee is not None]
 
-    # --------------------- FIRST AND LAST NAME --------------------- #
-    names = soup.find_all('div', class_='zp_xVJ20')
-    names_clean = [name.find('a').text.strip() for name in names]
+        # --------------------- EMAILS --------------------- #
+        emails = soup.find_all('div', class_='zp_jcL6a')
+        emails_list = [email.find('a', class_='zp-link zp_OotKe zp_Iu6Pf').text.strip() if email.find('a', class_='zp-link zp_OotKe zp_Iu6Pf') is not None else '' for email in emails]
 
-    # --------------------- TITLE --------------------- #
-    titles = soup.find_all('span', class_='zp_Y6y8d')
-    titles_list = [titles[i].text.strip() for i in range(0, len(titles), 2) if titles[i] is not None]
+        all_data['Name'].extend(names_clean)
+        all_data['Job role'].extend(titles_list)
+        all_data['Company Name'].extend(company_names_clean)
+        all_data['Number of Employees'].extend(numbers_list)
+        all_data['Email'].extend(emails_list)
 
-    # --------------------- COMPANY NAME --------------------- #
-    company_names = soup.find_all('div', class_='zp_J1j17')
-    company_names_clean = [name.find('a').text.strip() for name in company_names]
+        # If not the last page, click the next page button
+        if page_num < num_pages_to_scrape:
+            try:
+                next_page = driver.find_element(By.XPATH, '//*[@id="main-app"]/div[2]/div/div/div/div[2]/div/div[2]/div/div/div/div/div/div[2]/div/div[4]/div/div/div/div/div[3]/div/div[2]/button[2]')
+                next_page.click()
+                time.sleep(3)  # Add a sleep to give the page time to load
+                print(f'Everything is still going as planned. Currently printing {page_num}/{num_pages_to_scrape}.')
+            except NoSuchElementException:
+                print("No button to click.")
 
-    # --------------------- PHONE NUMBERS --------------------- #
-    phone_numbers = soup.find_all('span', class_='zp_lm1kV')
-    phone_numbers_clean = [phone.find('a') for phone in phone_numbers]
-    numbers = [phone.text.strip() for phone in phone_numbers_clean if phone is not None]
+    df = pd.DataFrame(all_data)
+    return df
 
-    # --------------------- NUMBER OF EMPLOYEES --------------------- #
-    number_of_employees = soup.find_all('span', class_='zp_Y6y8d')
-    numbers_list = [employee.text.strip() for employee in number_of_employees[1::2] if employee is not None]
+def save_to_excel(df, excel_file_path):
+    if os.path.isfile(excel_file_path):
+        existing_df = pd.read_excel(excel_file_path)
+        
+        # Check for duplicates in the existing DataFrame and the new data
+        df_no_duplicates = pd.concat([existing_df, df]).drop_duplicates(keep='last')
+        
+        df_no_duplicates.to_excel(excel_file_path, index=False)
+        print("Data saved to", excel_file_path)
+    else:
+        df.to_excel(excel_file_path, index=False)
+        print("Data saved to", excel_file_path)
 
-    # --------------------- EMAILS --------------------- #
-    emails = soup.find_all('div', class_='zp_jcL6a')
-    emails_list = [email.find('a', class_='zp-link zp_OotKe zp_Iu6Pf').text.strip() if email.find('a', class_='zp-link zp_OotKe zp_Iu6Pf') is not None else '' for email in emails]
-
-    all_data['Name'].extend(names_clean)
-    all_data['Job role'].extend(titles_list)
-    all_data['Company Name'].extend(company_names_clean)
-    all_data['Number of Employees'].extend(numbers_list)
-    all_data['Email'].extend(emails_list)
-
-    # If not the last page, click the next page button
-    if page_num < num_pages_to_scrape:
-        try:
-            next_page = driver.find_element(By.XPATH, next_page_button_xpath)
-            next_page.click()
-            time.sleep(3)  # Add a sleep to give the page time to load
-            print(f'Everything is still going as planned. Currently printing {page_num}/{num_pages_to_scrape}.')
-        except:
-            print("No button to click.")
-
-# Create a DataFrame from the list of emails
-df = pd.DataFrame(all_data)
-
-# Save the DataFrame to an Excel file
-excel_file_path = 'complete_data.xlsx'
-
-if os.path.isfile(excel_file_path):
-    # If the file already exists, load the existing data
-    existing_df = pd.read_excel(excel_file_path)
-
-    # Append the new data to the existing DataFrame
-    existing_df = existing_df._append(df, ignore_index=True)
-
-    # Save the combined DataFrame back to the same file
-    existing_df.to_excel(excel_file_path, index=False)
-else:
-    # If the file doesn't exist, save the DataFrame as a new file
-    df.to_excel(excel_file_path, index=False)
-
-# Close the webdriver
-driver.quit()
-
-print(f"Scraped emails saved to {excel_file_path}")
-
-# Removing the duplicates
 def remove_duplicates(input_file, output_file):
-    # Read Excel file into a DataFrame
     df = pd.read_excel(input_file)
-
-    # Check if there are duplicate rows
     if df.duplicated().any():
-        # Identify and remove duplicate rows
         df_no_duplicates = df.drop_duplicates()
-
-        # Save the modified DataFrame to a new Excel file
         df_no_duplicates.to_excel(output_file, index=False)
-
         print("Duplicate rows removed and saved to", output_file)
     else:
         print("No duplicate rows found. Data remains unchanged.")
 
 if __name__ == "__main__":
-    # Specify the input and output file paths
-    input_file_path = "complete_data.xlsx"  # Replace with your input file path
-    output_file_path = "output_file.xlsx"  # Replace with your desired output file path
 
-    # Call the function to remove duplicates
-    remove_duplicates(input_file_path, output_file_path)
+    URL = "YOUR APOLLO SAVED LIST LINK"
+    
+    user_agents = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36"]
+
+    driver = setup_webdriver()
+
+    email = 'YOUR EMAIL'
+    password = 'YOUR PASSWORD'
+    login(driver, email, password)
+
+    num_pages_to_scrape = 5
+    scraped_data = scrape_data(driver, num_pages_to_scrape)
+
+    excel_file_path = 'complete_data.xlsx'
+    save_to_excel(scraped_data, excel_file_path)
+
+    driver.quit()
+
+    output_file_path = "output_file.xlsx"
+    remove_duplicates(excel_file_path, output_file_path)
