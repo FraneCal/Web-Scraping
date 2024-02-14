@@ -1,23 +1,49 @@
 import requests
+import csv
 
 url = 'https://api.thecompaniesapi.com/v1/companies/similar'
 headers = {'Authorization': 'Basic 3C69nnR1'}
-param = {'domains[]': 'kace.com'}
+
+input_csv_file = 'domain_names.csv'
+output_csv_file = 'output_data.csv'
 
 try:
-    response = requests.get(url, headers=headers , params=param)
-    response.raise_for_status()  # Raise an HTTPError for bad responses
-    data = response.json()
-    main_industry = data['companies'][0]['industryMain']
-    industries = data['companies'][0]['industries']
-    #print(data)
-except requests.exceptions.HTTPError as errh:
-    print("HTTP Error:", errh)
-except requests.exceptions.RequestException as err:
-    print("Request Error:", err)
+    with open(input_csv_file, 'r') as csvfile:
+        reader = csv.reader(csvfile)
+        next(reader)  # Skip header if present
+        output_data = [['Domain', 'Main Industry']]
 
-print(main_industry)
-print(industries)
+        for row in reader:
+            domain = row[0]
+            param = {'domains[]': domain}
+
+            try:
+                response = requests.get(url, headers=headers, params=param)
+                response.raise_for_status()  # Raise an HTTPError for bad responses
+                data = response.json()
+
+                if 'companies' in data and data['companies']:
+                    main_industry = data['companies'][0]['industryMain']
+                    output_data.append([domain, main_industry])
+                else:
+                    output_data.append([domain, 'Industry not found'])
+                    print(f"No company data found for domain {domain}")
+
+            except requests.exceptions.HTTPError as errh:
+                print(f"HTTP Error for domain {domain}:", errh)
+            except requests.exceptions.RequestException as err:
+                print(f"Request Error for domain {domain}:", err)
+
+    # Save results to a new CSV file
+    with open(output_csv_file, 'w', newline='') as output_csv:
+        writer = csv.writer(output_csv)
+        writer.writerows(output_data)
+
+except FileNotFoundError:
+    print(f"Error: The file '{input_csv_file}' does not exist.")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
+
 
 
 
