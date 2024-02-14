@@ -1,20 +1,23 @@
 import requests
 
+url = 'https://api.thecompaniesapi.com/v1/companies/similar'
+headers = {'Authorization': 'Basic 3C69nnR1'}
+param = {'domains[]': 'kace.com'}
 
-url = 'https://api.thecompaniesapi.com/v1/companies/similar?domains[]=kace.com'
-headers = {'Authorization: Basic 3C69nnR1'}
+try:
+    response = requests.get(url, headers=headers , params=param)
+    response.raise_for_status()  # Raise an HTTPError for bad responses
+    data = response.json()
+    main_industry = data['companies'][0]['industryMain']
+    industries = data['companies'][0]['industries']
+    #print(data)
+except requests.exceptions.HTTPError as errh:
+    print("HTTP Error:", errh)
+except requests.exceptions.RequestException as err:
+    print("Request Error:", err)
 
-
-response = requests.get(url, "?token=3C69nnR1")
-data = response.json()
-
-print(data)
-
-# main_industry = data[0]['industryMain']
-# industries = data[0]['industries']
-
-# print(main_industry)
-# print(industries)
+print(main_industry)
+print(industries)
 
 
 
