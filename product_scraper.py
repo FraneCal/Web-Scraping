@@ -46,27 +46,29 @@ def scrape_and_store(link):
         title = soup.find('h1', class_='product_name title').getText()
         cleaned_title = clean_title(title)
         data["Title"].append(cleaned_title)
-
-        #Image link
+ 
+        # Image link
         image_link = soup.find('a', class_='product-gallery__link').get('href')
         data['Image link'].append(image_link)
-
+ 
         # Price
         price = soup.find('div', class_='product-block--price').find('span', class_='money').getText()
         data['Price'].append(price)
-
-        # # Description
+ 
+        # Description
         description = soup.find('div', id='view-more_description').find('p').getText()
         data['Description'].append(description)
-
+ 
         # Variables (size, color, style/version/edition)
-        color = soup.find('div', class_='swatch--gl clearfix')
-        print(color)
+        color_element = soup.find('div', class_='product-block--form').find('span')
+        color = color_element.getText().split(":")[1].strip() if color_element else None
         data['Variables']['Color'].append(color)
-
-        # size = soup.find('span', class_='name-variant')
-        #print(size)
-        # data['Variables']['Size'].append(size)
+ 
+        # Size
+        size_element = soup.find('div', class_='product-block--form').find('span', class_='attr-title-hover')
+        print(size_element)
+        size = size_element.getText().strip() if size_element else None
+        data['Variables']['Size'].append(size)
  
 def main():
     threads = []
