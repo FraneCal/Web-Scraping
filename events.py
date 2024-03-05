@@ -1,44 +1,60 @@
-from bs4 import BeautifulSoup
 import requests
+from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
+import concurrent.futures
+import pandas as pd
 
-# Get the current date
-current_date = datetime.now().strftime("%Y-%m-%d")
+def fetch_event(link):
+    response = requests.get(link)
+    response.raise_for_status()
+    return response.text
 
-# Calculate the end date (current date + 7 days)
-end_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+def scrape_event(link, unique_links, data):
+    html = fetch_event(link)
+    event_soup = BeautifulSoup(html, 'html.parser')
+    event_name = event_soup.find('h1', class_='event-title css-0').getText()
+    date_and_time = event_soup.find('span', class_='date-info__full-datetime').getText()
+    data.append({'Event Name': event_name, 'Date and Time': date_and_time})
 
-# Construct the URL with dynamic start and end dates
-URL = f"https://www.eventbrite.com/d/canada--toronto/all-events/?page=1&start_date={current_date}&end_date={end_date}"
+def main():
+    # Get the current date
+    current_date = datetime.now().strftime("%Y-%m-%d")
 
-header = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-    "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8"
-}
+    # Calculate the end date (current date + 7 days)
+    end_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
 
-response = requests.get(URL, headers=header)
-response.raise_for_status()
+    # Construct the URL with dynamic start and end dates
+    URL = f"https://www.eventbrite.com/d/canada--toronto/all-events/?page=1&start_date={current_date}&end_date={end_date}"
 
-web_page = response.text
-soup = BeautifulSoup(web_page, 'html.parser')
+    header = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8"
+    }
 
-# Event name
-names = soup.find_all('h2', class_='Typography_root__487rx #3a3247 Typography_body-lg__487rx event-card__clamp-line--two Typography_align-match-parent__487rx')
-names_set = set()
-for name in names:
-    names_set.add(name.getText())
+    response = requests.get(URL, headers=header)
+    response.raise_for_status()
+    web_page = response.text
+    soup = BeautifulSoup(web_page, 'html.parser')
+    containers = soup.find_all('section', class_='event-card-details')
 
-names_list = list(names_set)
+    # Use a set to store unique links
+    unique_links = set()
 
-# Event date and time
-dates_and_times = soup.find_all('p', class_='Typography_root__487rx #585163 Typography_body-md__487rx event-card__clamp-line--one Typography_align-match-parent__487rx')
+    for container in containers:
+        link = container.find('a', class_='event-card-link').get('href')
+        unique_links.add(link)
 
-filtered_dates_and_times = []
+    # Create an empty list to store the scraped data
+    scraped_data = []
 
-for date_and_time in dates_and_times:
-    text = date_and_time.getText().strip()
-    if 'at' in text and (text.endswith('AM') or text.endswith('PM')):
-        filtered_dates_and_times.append(text)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.map(scrape_event, unique_links, [unique_links]*len(unique_links), [scraped_data]*len(unique_links))
 
-for name, date_and_time in zip(names_list, filtered_dates_and_times):
-    print(f"Event Name: {name}\tEvent Date and Time: {date_and_time}")
+    # Convert the list of dictionaries to a pandas DataFrame
+    df = pd.DataFrame(scraped_data)
+
+    # Save the DataFrame to an Excel file
+    df.to_excel('scraped_events.xlsx', index=False)
+
+if __name__ == "__main__":
+    main()
