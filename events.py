@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import concurrent.futures
 import pandas as pd
+import requests
 
 def fetch_event(link):
     response = requests.get(link)
