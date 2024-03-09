@@ -8,8 +8,8 @@ URL = "ENTER URL"
 
 # FIND YOUR HEADER INFO HERE: https://myhttpheader.com/
 header = {
-    "User-Agent": "YOUR USER AGENT",
-    "Accept-Language": "YOUR ACCEPT LANGUAGE"
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8"
 }
 
 response = requests.get(URL, headers=header)
