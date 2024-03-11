@@ -75,11 +75,7 @@ def extract_information(soup):
 # Set up the WebDriver
 URL = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/wohnung-kaufen?enteredFrom=result_list'
 
-proxy_address = ["72.252.4.49:4145", "182.253.159.142:1080", "117.83.173.216:23456", "113.161.175.177:5678", "1.0.136.207:4145", "213.150.221.198:4153"]
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument(f'--proxy-server={random.choice(proxy_address)}')
-
-driver = webdriver.Chrome(options=chrome_options)
+driver = webdriver.Chrome()
 actions = ActionChains(driver)
 driver.get(URL)
 
