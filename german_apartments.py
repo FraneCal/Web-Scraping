@@ -130,7 +130,7 @@ driver.quit()
 
 
 
-
+#------------------------------------ WORKING CODE FOR APARTMENTS ------------------------------------#
 
 # from bs4 import BeautifulSoup
 # from selenium import webdriver
@@ -172,47 +172,51 @@ driver.quit()
 #     except:
 #         print("Accept cookies not found.")
 
+# house_data = {
+#         'House link': [],
+#         'Price per square meter [€]': [],
+#     } 
+
 # def extract_information(soup):
 #     # Find links inside the information div
 #     information = soup.find_all('dd', class_='font-highlight font-tabular')
 #     links = [info.find_previous('div', class_='grid-item').find('a')['href'] for info in information]
-
-#     house_data = []  # List to store data for saving to Excel
 
 #     for link, info in zip(links, information):
 #         house_link = f"https://www.immobilienscout24.de{link}"
 
 #         # Extract and print only the prices and square meters
 #         text = info.getText().strip()
-#         if '€' in text:
-#             # Remove euro sign and convert to int
-#             price = int(text.replace('€', '').replace('.', '').replace(',', '').strip())
-#         elif 'm²' in text:
-#             # Remove square meter sign and convert to int
-#             square_meter_str = text.replace('m²', '').replace(',', '').strip()
+#         try:
+#             if '€' in text:
+#                 # Remove euro sign and convert to int
+#                 price = int(text.replace('€', '').replace('.', '').replace(',', '').strip())
+#             elif 'm²' in text:
+#                 # Remove square meter sign and convert to int
+#                 square_meter_str = text.replace('m²', '').replace(',', '').strip()
 
-#             # Handle cases where dot is used as a thousand separator
-#             if '.' in square_meter_str and square_meter_str.count('.') == 1:
-#                 # If there is only one dot, consider it as a thousand separator
-#                 square_meter_str = square_meter_str.replace('.', '')
-#             elif '.' in square_meter_str and square_meter_str.count('.') > 1:
-#                 # If there are multiple dots, keep only the last one as the decimal point
-#                 square_meter_str = square_meter_str.rsplit('.', 1)[0] + square_meter_str.rsplit('.', 1)[1].replace('.', '')
+#                 # Handle cases where dot is used as a thousand separator
+#                 if '.' in square_meter_str and square_meter_str.count('.') == 1:
+#                     # If there is only one dot, consider it as a thousand separator
+#                     square_meter_str = square_meter_str.replace('.', '')
+#                 elif '.' in square_meter_str and square_meter_str.count('.') > 1:
+#                     # If there are multiple dots, keep only the last one as the decimal point
+#                     square_meter_str = square_meter_str.rsplit('.', 1)[0] + square_meter_str.rsplit('.', 1)[1].replace('.', '')
 
-#             # Convert to float, handle the case when it's zero
-#             square_meter = float(square_meter_str) if square_meter_str else 0.0
+#                 # Convert to float, handle the case when it's zero
+#                 square_meter = float(square_meter_str) if square_meter_str else 0.0
 
-#             # Check if square_meter is non-zero before division
-#             if square_meter != 0:
-#                 price_per_square_meter = price / square_meter
+#                 # Check if square_meter is non-zero before division
+#                 if square_meter != 0:
+#                     price_per_square_meter = price / square_meter
 
-#                 # Check if price_per_square_meter is within the specified range
-#                 if 2000 <= price_per_square_meter <= 3000:
-#                     # Append data to the list for saving to Excel
-#                     house_data.append({
-#                         'House Link': house_link,
-#                         'Price per square meter': price_per_square_meter
-#                     })
+#                     # Check if price_per_square_meter is within the specified range
+#                     if 2000 <= price_per_square_meter <= 3000:
+#                         # Append data to the list for saving to Excel
+#                         house_data['House link'].append(house_link)
+#                         house_data['Price per square meter [€]'].append(price_per_square_meter)
+#         except:
+#             print("Price or the living space information is missing.")
 
 #     return house_data
 
@@ -246,7 +250,6 @@ driver.quit()
 # accept_cookies(driver)
 
 # current_page = start_page
-# all_results = []
 
 # while current_page <= max_pages:
 #     # Extract information from the current page
@@ -255,11 +258,8 @@ driver.quit()
 #     results = extract_information(soup)
 
 #     if results:
-#         # Save the results to the all_results list
-#         all_results.extend(results)
-
 #         # Save the all_results to the Excel file after each page if there are results
-#         df = pd.DataFrame(all_results, columns=['House Link', 'Price per Square Meter'])
+#         df = pd.DataFrame(house_data)
 #         df.to_excel('all_house_prices.xlsx', index=False)
 
 #     # Move to the next page
