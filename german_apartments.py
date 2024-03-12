@@ -246,6 +246,8 @@ driver.quit()
 # # Solve captcha slider
 # solve_captcha_slider(driver)
 
+# time.sleep(3)
+
 # # Accept cookies
 # accept_cookies(driver)
 
