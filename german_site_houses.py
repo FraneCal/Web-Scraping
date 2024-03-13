@@ -163,13 +163,6 @@ time.sleep(5)
 captcha = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, 'geetest_radar_tip')))
 captcha.click()
 
-# Wait for the captcha to be solved
-try:
-    WebDriverWait(driver, 60).until(EC.invisibility_of_element_located((By.CLASS_NAME, 'geetest_radar_tip')))
-    print("Captcha solved.")
-except TimeoutException:
-    print("Captcha solving took too long.")
-
 # Solve captcha slider
 solve_captcha_slider(driver)
 
