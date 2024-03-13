@@ -5,9 +5,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver import ActionChains
 from selenium.common.exceptions import TimeoutException
-import random
+from selenium.webdriver.chrome.options import Options
+from fake_useragent import UserAgent
 import time
-import pandas as pd
+import sqlite3
 
 def solve_captcha_slider(driver):
     try:
@@ -43,6 +44,62 @@ house_data = {
         'Price per square meter [€]': [],
     } 
 
+def special_offer_container(soup):
+    # Looking for special offer container
+    try:
+        for _ in range(2):
+            # Show all of the offers in the special offer container
+            show_more_units = driver.find_element(By.CLASS_NAME, 'padding-left-none link-text-secondary button')
+            show_more_units.click()
+
+        time.sleep(1)
+        containers = soup.find_all('div', class_='grid grid-flex grid-justify-space-between')
+        links_container = [container.find('a')['href'] for container in containers]
+        for link_container, info_container in zip(links_container, containers):
+            house_link_container = f"https://www.immobilienscout24.de{link_container}"
+            print(house_link_container)
+
+            text_container = info_container.getText().strip()
+            print(text_container)
+            try:
+                if '€' in text_container:
+                    # Remove euro sign and convert to int
+                    price = int(text_container.replace('€', '').replace('.', '').replace(',', '').strip())
+                    print(price)
+                elif 'm²' in text_container:
+                    # Remove square meter sign and convert to int
+                    square_meter_str = text_container.replace('m²', '').replace(',', '').strip()
+                    print(square_meter_str)
+
+                    # Handle cases where dot is used as a thousand separator
+                    if '.' in square_meter_str and square_meter_str.count('.') == 1:
+                        # If there is only one dot, consider it as a thousand separator
+                        square_meter_str = square_meter_str.replace('.', '')
+                    elif '.' in square_meter_str and square_meter_str.count('.') > 1:
+                        # If there are multiple dots, keep only the last one as the decimal point
+                        square_meter_str = square_meter_str.rsplit('.', 1)[0] + square_meter_str.rsplit('.', 1)[1].replace('.', '')
+
+                    # Convert to float, handle the case when it's zero
+                    square_meter = float(square_meter_str) if square_meter_str else 0.0
+
+                    # Check if square_meter is non-zero before division
+                    if square_meter != 0:
+                        price_per_square_meter = round(price / square_meter, 2)
+
+                        # Check if price_per_square_meter is within the specified range
+                        if 2000 <= price_per_square_meter <= 3000:
+                            # Append data to the list for saving to Excel
+                            house_data['House link'].append(house_link_container)
+                            house_data['Price per square meter [€]'].append(price_per_square_meter)
+            except:
+                print("Special offer price or the living space information is missing.")
+    
+    except:
+        print('No special offers found.')
+
+    return house_data
+
+
 def extract_information(soup):
     # Find links inside the information div
     information = soup.find_all('dd', class_='font-highlight font-tabular')
@@ -74,7 +131,7 @@ def extract_information(soup):
 
                 # Check if square_meter is non-zero before division
                 if square_meter != 0:
-                    price_per_square_meter = price / square_meter
+                    price_per_square_meter = round(price / square_meter, 2)
 
                     # Check if price_per_square_meter is within the specified range
                     if 2000 <= price_per_square_meter <= 3000:
@@ -86,12 +143,30 @@ def extract_information(soup):
 
     return house_data
 
+# Create SQLite connection and cursor
+conn = sqlite3.connect('database.db')
+cursor = conn.cursor()
+
+# Create table if it doesn't exist
+cursor.execute('''CREATE TABLE IF NOT EXISTS houses (
+                    id INTEGER PRIMARY KEY,
+                    house_link TEXT,
+                    price_per_square_meter REAL
+                )''')
+
 # Set up the WebDriver
 base_url = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/wohnung-kaufen'
 start_page = 1
-max_pages = 335
+max_pages = 332
 
-driver = webdriver.Chrome()
+# Generate fake user agents
+options = Options()
+ua = UserAgent()
+user_agent = ua.random
+
+options.add_argument(f'--user-agent={user_agent}')
+
+driver = webdriver.Chrome(options=options)
 actions = ActionChains(driver)
 driver.get(f'{base_url}?enteredFrom=result_list')
 
@@ -123,12 +198,24 @@ while current_page <= max_pages:
     # Extract information from the current page
     page_source = driver.page_source
     soup = BeautifulSoup(page_source, "html.parser")
+    special_offer_results = special_offer_container(soup)
     results = extract_information(soup)
 
     if results:
-        # Save the all_results to the Excel file after each page if there are results
-        df = pd.DataFrame(house_data)
-        df.to_excel('all_house_prices.xlsx', index=False)
+        for i in range(len(house_data['House link'])):
+            # Check if the house link already exists in the database
+            cursor.execute('''SELECT COUNT(*) FROM houses WHERE house_link = ?''', (house_data['House link'][i],))
+            result = cursor.fetchone()
+            if result[0] == 0:
+                # If the house link doesn't exist, insert it into the database
+                cursor.execute('''INSERT INTO houses (house_link, price_per_square_meter) VALUES (?, ?)''',
+                            (house_data['House link'][i], house_data['Price per square meter [€]'][i]))
+                conn.commit()
+            else:
+                print(f"House link {house_data['House link'][i]} already exists in the database, and will not be added.")
+
+    house_data['House link'].clear()
+    house_data['Price per square meter [€]'].clear()
 
     # Move to the next page
     current_page += 1
@@ -141,5 +228,6 @@ while current_page <= max_pages:
     # Add a delay to avoid being blocked by the website
     time.sleep(3)
 
-# Quit the driver
+# Close the connection and quit the driver
+conn.close()
 driver.quit()
