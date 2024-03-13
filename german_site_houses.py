@@ -15,20 +15,12 @@ import pandas as pd
 def solve_captcha_slider(driver):
     try:
         slider = driver.find_element(By.CLASS_NAME, 'geetest_slider_button')
-        attempt_counter = 0
-
-        while attempt_counter < 6:
-            actions.move_to_element(slider).click_and_hold().move_by_offset(10, 0).release().perform()
-            time.sleep(0.1)
-
-            # Check if puzzle captcha is still present
-            if EC.presence_of_element_located((By.CLASS_NAME, 'geetest_radar_tip'))(driver):
-                attempt_counter += 1
-            else:
-                break
-
+        for x in range(0, 200, 6):
+            actions.move_to_element(slider).click_and_hold().move_by_offset(x, 0).release().perform()
+            time.sleep(0.5)
     except:
         print('No slider found. Continuing with the code.')
+        
 
 def accept_cookies(driver):
     try:
