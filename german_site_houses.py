@@ -15,7 +15,7 @@ import pandas as pd
 def solve_captcha_slider(driver):
     try:
         slider = driver.find_element(By.CLASS_NAME, 'geetest_slider_button')
-        for x in range(0, 200, 6):
+        for x in range(0, 200, 10):
             actions.move_to_element(slider).click_and_hold().move_by_offset(x, 0).release().perform()
             time.sleep(0.5)
     except:
