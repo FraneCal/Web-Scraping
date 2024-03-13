@@ -1,5 +1,5 @@
 # COMPLETE SPECIAL OFFER FUNCTION
-
+# COMPLETE EXTRACTING INFORMATION SO IT SCRAPES ONLY m2 WHICH YOU NEED
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
