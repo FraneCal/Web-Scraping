@@ -157,7 +157,7 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS houses (
 # Set up the WebDriver
 base_url = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/wohnung-kaufen'
 start_page = 1
-max_pages = 332
+# max_pages = 332
 
 # Generate fake user agents
 options = Options()
@@ -187,9 +187,9 @@ time.sleep(3)
 # Accept cookies
 accept_cookies(driver)
 
-current_page = start_page
+# current_page = start_page
 
-while current_page <= max_pages:
+while True:
     # Extract information from the current page
     page_source = driver.page_source
     soup = BeautifulSoup(page_source, "html.parser")
@@ -213,12 +213,20 @@ while current_page <= max_pages:
     house_data['Price per square meter [€]'].clear()
 
     # Move to the next page
-    current_page += 1
-    next_url = f'{base_url}?pagenumber={current_page}'
-    driver.get(next_url)
+    try:
+        next_page = driver.find_element(By.XPATH, '//a[@aria-label="Next page" and @aria-disabled="false"]')
+        next_page.click()
+    except:
+        print('No more pages to click.')
+        break
 
-    # Extract and print the current page number
-    print(f"Scraping page number: {current_page}")
+    # # Move to the next page
+    # current_page += 1
+    # next_url = f'{base_url}?pagenumber={current_page}'
+    # driver.get(next_url)
+
+    # # Extract and print the current page number
+    # print(f"Scraping page number: {current_page}")
 
     # Add a delay to avoid being blocked by the website
     time.sleep(3)
