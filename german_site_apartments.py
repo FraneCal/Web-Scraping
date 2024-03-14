@@ -236,6 +236,8 @@ time.sleep(4)
 # Accept cookies
 accept_cookies(driver)
 
+new_links = []
+
 while True:
     # Extract information from the current page
     page_source = driver.page_source
@@ -243,10 +245,7 @@ while True:
     special_offer_results = special_offer_container(soup)
     results = extract_information(soup)
 
-    email_sent = False
-
-    if results and not email_sent:
-        new_links = []
+    if results:
         for i in range(len(house_data['House link'])):
             # Check if the house link already exists in the database
             cursor.execute('''SELECT COUNT(*) FROM houses WHERE house_link = ?''', (house_data['House link'][i],))
@@ -258,9 +257,7 @@ while True:
                 conn.commit()
                 new_links.append(house_data['House link'][i])
 
-        if new_links:
-            send_email(new_links)
-            email_sent = True
+        new_links.extend(new_links)
 
     house_data['House link'].clear()
     house_data['Price per square meter [€]'].clear()
@@ -288,3 +285,7 @@ while True:
 # Close the connection and quit the driver
 conn.close()
 driver.quit()
+
+# Send email with all new links
+if new_links:
+    send_email(new_links)
