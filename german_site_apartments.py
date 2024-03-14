@@ -10,6 +10,7 @@ from fake_useragent import UserAgent
 import time
 import sqlite3
 
+
 def solve_captcha_slider(driver):
     try:
         slider = driver.find_element(By.CLASS_NAME, 'geetest_slider_button')
@@ -28,6 +29,7 @@ def solve_captcha_slider(driver):
     except:
         print('No slider found. Continuing with the code.')
 
+
 def accept_cookies(driver):
     try:
         def get_shadow_root(element):
@@ -39,10 +41,12 @@ def accept_cookies(driver):
     except:
         print("Accept cookies not found.")
 
+
 house_data = {
-        'House link': [],
-        'Price per square meter [€]': [],
-    } 
+    'House link': [],
+    'Price per square meter [€]': [],
+}
+
 
 def special_offer_container(soup):
     # Looking for special offer container
@@ -77,7 +81,8 @@ def special_offer_container(soup):
                         square_meter_str = square_meter_str.replace('.', '')
                     elif '.' in square_meter_str and square_meter_str.count('.') > 1:
                         # If there are multiple dots, keep only the last one as the decimal point
-                        square_meter_str = square_meter_str.rsplit('.', 1)[0] + square_meter_str.rsplit('.', 1)[1].replace('.', '')
+                        square_meter_str = square_meter_str.rsplit('.', 1)[0] + square_meter_str.rsplit('.', 1)[
+                            1].replace('.', '')
 
                     # Convert to float, handle the case when it's zero
                     square_meter = float(square_meter_str) if square_meter_str else 0.0
@@ -93,7 +98,7 @@ def special_offer_container(soup):
                             house_data['Price per square meter [€]'].append(price_per_square_meter)
             except:
                 print("Special offer price or the living space information is missing.")
-    
+
     except:
         print('No special offers found.')
 
@@ -124,7 +129,8 @@ def extract_information(soup):
                     square_meter_str = square_meter_str.replace('.', '')
                 elif '.' in square_meter_str and square_meter_str.count('.') > 1:
                     # If there are multiple dots, keep only the last one as the decimal point
-                    square_meter_str = square_meter_str.rsplit('.', 1)[0] + square_meter_str.rsplit('.', 1)[1].replace('.', '')
+                    square_meter_str = square_meter_str.rsplit('.', 1)[0] + square_meter_str.rsplit('.', 1)[1].replace(
+                        '.', '')
 
                 # Convert to float, handle the case when it's zero
                 square_meter = float(square_meter_str) if square_meter_str else 0.0
@@ -143,6 +149,7 @@ def extract_information(soup):
 
     return house_data
 
+
 # Create SQLite connection and cursor
 conn = sqlite3.connect('database.db')
 cursor = conn.cursor()
@@ -154,10 +161,30 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS houses (
                     price_per_square_meter REAL
                 )''')
 
-# Set up the WebDriver
+# # Ask the user for input
+# while True:
+#     city = input("Enter the city you want to search for: ").lower()
+#     if city != "":
+#         break
+#     else:
+#         print("City name cannot be empty. Please enter a valid city name.")
+#
+# subregion = input("Enter the subregion (optional, press Enter to skip): ").lower()
+#
+# while True:
+#     apart_or_house = input("Enter what you are buying (wohnung or haus): ").lower()
+#     if apart_or_house == "wohnung" or apart_or_house == "haus":
+#         break
+#     else:
+#         print("Please enter either 'wohnung' or 'haus'.")
+#
+# if subregion:
+#     base_url = f"https://www.immobilienscout24.de/Suche/de/{city}/{city}/{subregion}/wohnung-kaufen"
+# else:
+#     base_url = f"https://www.immobilienscout24.de/Suche/de/{city}/{city}/wohnung-kaufen"
+
 base_url = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/wohnung-kaufen'
 start_page = 1
-# max_pages = 332
 
 # Generate fake user agents
 options = Options()
@@ -177,7 +204,7 @@ time.sleep(5)
 captcha = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, 'geetest_radar_tip')))
 captcha.click()
 
-time.sleep(3)
+time.sleep(4)
 
 # Solve captcha slider
 solve_captcha_slider(driver)
@@ -186,8 +213,6 @@ time.sleep(3)
 
 # Accept cookies
 accept_cookies(driver)
-
-# current_page = start_page
 
 while True:
     # Extract information from the current page
@@ -204,10 +229,11 @@ while True:
             if result[0] == 0:
                 # If the house link doesn't exist, insert it into the database
                 cursor.execute('''INSERT INTO houses (house_link, price_per_square_meter) VALUES (?, ?)''',
-                            (house_data['House link'][i], house_data['Price per square meter [€]'][i]))
+                               (house_data['House link'][i], house_data['Price per square meter [€]'][i]))
                 conn.commit()
             else:
-                print(f"House link {house_data['House link'][i]} already exists in the database, and will not be added.")
+                print(
+                    f"House link {house_data['House link'][i]} already exists in the database, and will not be added.")
 
     house_data['House link'].clear()
     house_data['Price per square meter [€]'].clear()
