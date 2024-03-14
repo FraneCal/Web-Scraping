@@ -9,6 +9,9 @@ from selenium.webdriver.chrome.options import Options
 from fake_useragent import UserAgent
 import time
 import sqlite3
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 
 def solve_captcha_slider(driver):
@@ -149,6 +152,25 @@ def extract_information(soup):
 
     return house_data
 
+def send_email(new_links):
+    my_email = "franecalusic94@gmail.com"
+    password = "jmyxbqpbrzlteway"
+
+    message = MIMEMultipart()
+    message['From'] = my_email
+    message['To'] = 'fcalus00@fesb.hr'
+    message['Subject'] = 'New Apartments Added'
+
+    body = "\n".join(new_links)
+    message.attach(MIMEText(body, 'plain'))
+
+    with smtplib.SMTP('smtp.gmail.com', 587) as connection:
+        connection.starttls()
+        connection.login(user=my_email, password=password)
+        connection.sendmail(from_addr=my_email,
+                            to_addrs='fcalus00@fesb.hr',
+                            msg=message.as_string())
+
 
 # Create SQLite connection and cursor
 conn = sqlite3.connect('database.db')
@@ -195,7 +217,7 @@ options.add_argument(f'--user-agent={user_agent}')
 
 driver = webdriver.Chrome(options=options)
 actions = ActionChains(driver)
-driver.get(f'{base_url}?enteredFrom=result_list')
+driver.get(base_url)
 
 # Wait for the page to load
 time.sleep(5)
@@ -209,7 +231,7 @@ time.sleep(4)
 # Solve captcha slider
 solve_captcha_slider(driver)
 
-time.sleep(3)
+time.sleep(4)
 
 # Accept cookies
 accept_cookies(driver)
@@ -221,7 +243,10 @@ while True:
     special_offer_results = special_offer_container(soup)
     results = extract_information(soup)
 
-    if results:
+    email_sent = False
+
+    if results and not email_sent:
+        new_links = []
         for i in range(len(house_data['House link'])):
             # Check if the house link already exists in the database
             cursor.execute('''SELECT COUNT(*) FROM houses WHERE house_link = ?''', (house_data['House link'][i],))
@@ -231,9 +256,11 @@ while True:
                 cursor.execute('''INSERT INTO houses (house_link, price_per_square_meter) VALUES (?, ?)''',
                                (house_data['House link'][i], house_data['Price per square meter [€]'][i]))
                 conn.commit()
-            else:
-                print(
-                    f"House link {house_data['House link'][i]} already exists in the database, and will not be added.")
+                new_links.append(house_data['House link'][i])
+
+        if new_links:
+            send_email(new_links)
+            email_sent = True
 
     house_data['House link'].clear()
     house_data['Price per square meter [€]'].clear()
@@ -256,6 +283,7 @@ while True:
 
     # Add a delay to avoid being blocked by the website
     time.sleep(3)
+
 
 # Close the connection and quit the driver
 conn.close()
