@@ -1,3 +1,6 @@
+# -------------------------------------------- FIX SPECIAL PRICES FUNCTION -------------------------------------------- #
+
+
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -17,18 +20,9 @@ from email.mime.text import MIMEText
 def solve_captcha_slider(driver):
     try:
         slider = driver.find_element(By.CLASS_NAME, 'geetest_slider_button')
-        attempt_counter = 0
-
-        while attempt_counter < 6:
-            actions.move_to_element(slider).click_and_hold().move_by_offset(10, 0).release().perform()
-            time.sleep(0.1)
-
-            # Check if puzzle captcha is still present
-            if EC.presence_of_element_located((By.CLASS_NAME, 'geetest_radar_tip'))(driver):
-                attempt_counter += 1
-            else:
-                break
-
+        for x in range(0, 200, 10):
+            actions.move_to_element(slider).click_and_hold().move_by_offset(x, 0).release().perform()
+            time.sleep(0.5)
     except:
         print('No slider found. Continuing with the code.')
 
@@ -108,7 +102,7 @@ def special_offer_container(soup):
     return house_data
 
 
-def extract_information(soup):
+def extract_information_apartments(soup):
     # Find links inside the information div
     information = soup.find_all('dd', class_='font-highlight font-tabular')
     links = [info.find_previous('div', class_='grid-item').find('a')['href'] for info in information]
@@ -151,6 +145,67 @@ def extract_information(soup):
             print("Price or the living space information is missing.")
 
     return house_data
+    
+
+def extract_information_house(soup):
+    # Find all containers
+    containers = soup.find_all('div', class_='grid grid-flex grid-align-center grid-justify-space-between')
+
+    # Iterate over containers
+    for container in containers:
+        # Find all dd elements within the container
+        informations = container.find_all('dd')
+
+        # Extract links from a elements within the container
+        links = container.find_all('a')
+        links_list = [f"https://www.immobilienscout24.de{link.get('href')}" for link in links]
+
+        # Extract text from dd elements
+        variable = [information.getText() for information in informations]
+
+        # Extract price and square meter information from the correct positions
+        for i in range(0, len(variable), 2):
+            # Check if there are enough elements in the variable list
+            if i + 1 < len(variable):
+                price_text = variable[i]
+                square_meter_text = variable[i + 1]
+
+                # Check if both price and square meter information are present
+                if price_text and square_meter_text:
+                    try:
+                        # Remove euro sign and convert price to int
+                        price = int(price_text.replace('€', '').replace('.', '').replace(',', '').strip())
+
+                        # Remove square meter sign and convert to float
+                        square_meter_str = square_meter_text.replace('m²', '').replace(',', '').strip()
+
+                        # Handle cases where dot is used as a thousand separator
+                        if '.' in square_meter_str and square_meter_str.count('.') == 1:
+                            # If there is only one dot, consider it as a thousand separator
+                            square_meter_str = square_meter_str.replace('.', '')
+                        elif '.' in square_meter_str and square_meter_str.count('.') > 1:
+                            # If there are multiple dots, keep only the last one as the decimal point
+                            square_meter_str = square_meter_str.rsplit('.', 1)[0] + square_meter_str.rsplit('.', 1)[1].replace(
+                                '.', '')
+
+                        # Convert square meter to float
+                        square_meter = float(square_meter_str)
+
+                        # Check if square_meter is non-zero before division
+                        if square_meter != 0:
+                            price_per_square_meter = round(price / square_meter, 2)
+
+                            # Check if price_per_square_meter is within the specified range
+                            if 2000 <= price_per_square_meter <= 3000:
+                                # Append data to the list for saving to Excel
+                                house_data['House link'].extend(links_list)
+                                house_data['Price per square meter [€]'].append(price_per_square_meter)
+                    except (ValueError, IndexError):
+                        print("Price or the living space information is missing or invalid.")
+
+    return house_data
+    
+
 
 def send_email(new_links):
     my_email = "franecalusic94@gmail.com"
@@ -170,6 +225,27 @@ def send_email(new_links):
         connection.sendmail(from_addr=my_email,
                             to_addrs='fcalus00@fesb.hr',
                             msg=message.as_string())
+
+
+def check_words_in_link_content(cursor, exclude_words):
+    # Fetch all links from the database
+    cursor.execute('''SELECT house_link FROM houses''')
+    links_to_check = cursor.fetchall()
+
+    for link_row in links_to_check:
+        link = link_row[0]
+        # Scrape the content of the link using BeautifulSoup
+        driver.get(link)
+        time.sleep(3)  # Adjust this delay as needed
+        page_source = driver.page_source
+        soup = BeautifulSoup(page_source, "html.parser")
+        text_content = soup.get_text()
+
+        # Check if the link contains any of the exclude words
+        if any(word.lower() in text_content.lower() for word in exclude_words):
+            # If any exclude word is found, remove the link from the database
+            cursor.execute('''DELETE FROM houses WHERE house_link = ?''', (link,))
+            print(f"Link removed from database: {link}")
 
 
 # Create SQLite connection and cursor
@@ -205,7 +281,7 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS houses (
 # else:
 #     base_url = f"https://www.immobilienscout24.de/Suche/de/{city}/{city}/wohnung-kaufen"
 
-base_url = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/wohnung-kaufen'
+base_url = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/haus-kaufen'
 start_page = 1
 
 # Generate fake user agents
@@ -245,7 +321,14 @@ while True:
     page_source = driver.page_source
     soup = BeautifulSoup(page_source, "html.parser")
     special_offer_results = special_offer_container(soup)
-    results = extract_information(soup)
+    if "wohnung" in base_url:
+        print('Extracting prices of the apartments.')
+        results = extract_information_apartments(soup)
+    elif "haus" in base_url:
+        print('Extracting prices of the houses.')
+        results = extract_information_house(soup)
+    else:
+        print('No Wohnung or Haus in the URL.')
 
     if results:
         for i in range(len(house_data['House link'])):
@@ -283,6 +366,8 @@ while True:
     # Add a delay to avoid being blocked by the website
     time.sleep(3)
 
+# Check if any links need to be removed based on their content
+check_words_in_link_content(cursor, ["Zwangsversteigerungen", "Dachrohling"])
 
 # Close the connection and quit the driver
 conn.close()
@@ -295,7 +380,9 @@ if new_links:
 
 
 
-#######################################
+
+
+
 
 # from bs4 import BeautifulSoup
 # from selenium import webdriver
@@ -316,9 +403,18 @@ if new_links:
 # def solve_captcha_slider(driver):
 #     try:
 #         slider = driver.find_element(By.CLASS_NAME, 'geetest_slider_button')
-#         for x in range(0, 200, 10):
-#             actions.move_to_element(slider).click_and_hold().move_by_offset(x, 0).release().perform()
-#             time.sleep(0.5)
+#         attempt_counter = 0
+
+#         while attempt_counter < 6:
+#             actions.move_to_element(slider).click_and_hold().move_by_offset(10, 0).release().perform()
+#             time.sleep(0.1)
+
+#             # Check if puzzle captcha is still present
+#             if EC.presence_of_element_located((By.CLASS_NAME, 'geetest_radar_tip'))(driver):
+#                 attempt_counter += 1
+#             else:
+#                 break
+
 #     except:
 #         print('No slider found. Continuing with the code.')
 
@@ -462,27 +558,6 @@ if new_links:
 #                             msg=message.as_string())
 
 
-# def check_words_in_link_content(cursor, exclude_words):
-#     # Fetch all links from the database
-#     cursor.execute('''SELECT house_link FROM houses''')
-#     links_to_check = cursor.fetchall()
-
-#     for link_row in links_to_check:
-#         link = link_row[0]
-#         # Scrape the content of the link using BeautifulSoup
-#         driver.get(link)
-#         time.sleep(3)  # Adjust this delay as needed
-#         page_source = driver.page_source
-#         soup = BeautifulSoup(page_source, "html.parser")
-#         text_content = soup.get_text()
-
-#         # Check if the link contains any of the exclude words
-#         if any(word.lower() in text_content.lower() for word in exclude_words):
-#             # If any exclude word is found, remove the link from the database
-#             cursor.execute('''DELETE FROM houses WHERE house_link = ?''', (link,))
-#             print(f"Link removed from database: {link}")
-
-
 # # Create SQLite connection and cursor
 # conn = sqlite3.connect('database.db')
 # cursor = conn.cursor()
@@ -594,8 +669,6 @@ if new_links:
 #     # Add a delay to avoid being blocked by the website
 #     time.sleep(3)
 
-# # Check if any links need to be removed based on their content
-# check_words_in_link_content(cursor, ["Zwangsversteigerungen", "Dachrohling"])
 
 # # Close the connection and quit the driver
 # conn.close()
