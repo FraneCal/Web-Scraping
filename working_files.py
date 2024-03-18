@@ -201,8 +201,11 @@ while True:
     
     # container = soup.find('div', class_='grid grid-flex grid-align-center grid-justify-space-between')
     # informations = container.find_all('dd')
-    # for information in informations:
-    #     print(information)
+    # variable = [information.getText() for information in informations]
+
+    # modified_list = variable[:2] + variable[4:]
+
+    # print(modified_list)
         
     special_offer_results = special_offer_container(soup)
     results = extract_information(soup)
