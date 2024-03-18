@@ -199,13 +199,19 @@ while True:
     page_source = driver.page_source
     soup = BeautifulSoup(page_source, "html.parser")
     
-    # container = soup.find('div', class_='grid grid-flex grid-align-center grid-justify-space-between')
-    # informations = container.find_all('dd')
-    # variable = [information.getText() for information in informations]
-
-    # modified_list = variable[:2] + variable[4:]
-
-    # print(modified_list)
+    # containers = soup.find_all('div', class_='grid grid-flex grid-align-center grid-justify-space-between')
+    # for container in containers:
+    # # Find all dd elements within the container
+    #     informations = container.find_all('dd')
+        
+    #     # Extract text from dd elements
+    #     variable = [information.getText() for information in informations]
+        
+    #     # Remove every 3rd and 4th element
+    #     modified_list = variable[:2] + variable[4:]
+        
+    #     # Print modified list
+    #     print(modified_list)
         
     special_offer_results = special_offer_container(soup)
     results = extract_information(soup)
