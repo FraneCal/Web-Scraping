@@ -198,6 +198,12 @@ while True:
     # Extract information from the current page
     page_source = driver.page_source
     soup = BeautifulSoup(page_source, "html.parser")
+    
+    # container = soup.find('div', class_='grid grid-flex grid-align-center grid-justify-space-between')
+    # informations = container.find_all('dd')
+    # for information in informations:
+    #     print(information)
+        
     special_offer_results = special_offer_container(soup)
     results = extract_information(soup)
 
