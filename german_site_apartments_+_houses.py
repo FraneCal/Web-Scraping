@@ -145,7 +145,7 @@ def extract_information_apartments(soup):
             print("Price or the living space information is missing.")
 
     return house_data
-    
+
 
 def extract_information_house(soup):
     # Find all containers
@@ -185,7 +185,8 @@ def extract_information_house(soup):
                             square_meter_str = square_meter_str.replace('.', '')
                         elif '.' in square_meter_str and square_meter_str.count('.') > 1:
                             # If there are multiple dots, keep only the last one as the decimal point
-                            square_meter_str = square_meter_str.rsplit('.', 1)[0] + square_meter_str.rsplit('.', 1)[1].replace(
+                            square_meter_str = square_meter_str.rsplit('.', 1)[0] + square_meter_str.rsplit('.', 1)[
+                                1].replace(
                                 '.', '')
 
                         # Convert square meter to float
@@ -201,10 +202,10 @@ def extract_information_house(soup):
                                 house_data['House link'].extend(links_list)
                                 house_data['Price per square meter [€]'].append(price_per_square_meter)
                     except (ValueError, IndexError):
-                        print("Price or the living space information is missing or invalid.")
+                        #print("Price or the living space information is missing or invalid.")
+                        pass
 
     return house_data
-    
 
 
 def send_email(new_links):
@@ -236,7 +237,14 @@ def check_words_in_link_content(cursor, exclude_words):
         link = link_row[0]
         # Scrape the content of the link using BeautifulSoup
         driver.get(link)
-        time.sleep(3)  # Adjust this delay as needed
+
+        time.sleep(3)
+
+        expand_description = driver.find_element(By.XPATH, '//*[@id="is24-content"]/div[3]/div[3]/div/a')
+        expand_description.click()
+
+        time.sleep(2)
+
         page_source = driver.page_source
         soup = BeautifulSoup(page_source, "html.parser")
         text_content = soup.get_text()
@@ -316,20 +324,27 @@ accept_cookies(driver)
 
 new_links = []
 
+counter = 0
+
 while True:
+    counter += 1
+    print(f'Extracting infromation from page: {counter}')
     # Extract information from the current page
     page_source = driver.page_source
     soup = BeautifulSoup(page_source, "html.parser")
+
+    print("Stuck before extracting the prices and square meters.")
+
     special_offer_results = special_offer_container(soup)
+
     if "wohnung" in base_url:
-        print('Extracting prices of the apartments.')
         results = extract_information_apartments(soup)
     elif "haus" in base_url:
-        print('Extracting prices of the houses.')
         results = extract_information_house(soup)
     else:
         print('No Wohnung or Haus in the URL.')
 
+    print("Stuck before entering the database.")
     if results:
         for i in range(len(house_data['House link'])):
             # Check if the house link already exists in the database
@@ -342,11 +357,9 @@ while True:
                 conn.commit()
                 new_links.append(house_data['House link'][i])
 
-        new_links.extend(new_links)
+        new_links.extend(house_data['House link'])
 
-    house_data['House link'].clear()
-    house_data['Price per square meter [€]'].clear()
-
+    print("Stuck before next page.")
     # Move to the next page
     try:
         next_page = driver.find_element(By.XPATH, '//a[@aria-label="Next page" and @aria-disabled="false"]')
@@ -362,6 +375,9 @@ while True:
 
     # # Extract and print the current page number
     # print(f"Scraping page number: {current_page}")
+
+    house_data['House link'].clear()
+    house_data['Price per square meter [€]'].clear()
 
     # Add a delay to avoid being blocked by the website
     time.sleep(3)
