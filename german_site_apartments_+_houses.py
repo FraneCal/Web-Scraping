@@ -238,11 +238,6 @@ def check_words_in_link_content(cursor, exclude_words):
         # Scrape the content of the link using BeautifulSoup
         driver.get(link)
 
-        time.sleep(3)
-
-        expand_description = driver.find_element(By.XPATH, '//*[@id="is24-content"]/div[3]/div[3]/div/a')
-        expand_description.click()
-
         time.sleep(2)
 
         page_source = driver.page_source
@@ -289,7 +284,7 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS houses (
 # else:
 #     base_url = f"https://www.immobilienscout24.de/Suche/de/{city}/{city}/wohnung-kaufen"
 
-base_url = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/haus-kaufen'
+base_url = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/steglitz-zehlendorf/wohnung-kaufen?enteredFrom=one_step_search'
 start_page = 1
 
 # Generate fake user agents
