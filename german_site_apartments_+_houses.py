@@ -130,20 +130,24 @@ def extract_information_apartments(soup):
                 # Remove euro sign and convert to int
                 price = int(text.replace('€', '').replace('.', '').replace(',', '').strip())
             elif 'm²' in text:
-                # Remove square meter sign and convert to int
-                square_meter_str = text.replace('m²', '').replace(',', '').strip()
+                # Remove square meter sign and convert to float
+                square_meter_str = text.replace('m²', '').strip()
 
-                # Handle cases where dot is used as a thousand separator
-                if '.' in square_meter_str and square_meter_str.count('.') == 1:
-                    # If there is only one dot, consider it as a thousand separator
-                    square_meter_str = square_meter_str.replace('.', '')
-                elif '.' in square_meter_str and square_meter_str.count('.') > 1:
-                    # If there are multiple dots, keep only the last one as the decimal point
-                    square_meter_str = square_meter_str.rsplit('.', 1)[0] + square_meter_str.rsplit('.', 1)[1].replace(
-                        '.', '')
+                # Remove all commas
+                square_meter_str = square_meter_str.replace(',', '.')
+            
+                # Replace the first dot with an empty string to prevent decimal issues
+                if square_meter_str.count('.') == 2:
+                    square_meter_str = square_meter_str.replace('.', '', 1)
+        
 
-                # Convert to float, handle the case when it's zero
+                # Check if there are three digits after the dot and remove the dot if true
+                if '.' in square_meter_str and len(square_meter_str.split('.')[1]) == 3:
+                    square_meter_str = square_meter_str.replace('.', '', 1)
+
+                # Convert square meter to float
                 square_meter = float(square_meter_str) if square_meter_str else 0.0
+                print(f"4. {square_meter}")
 
                 # Check if square_meter is non-zero before division
                 if square_meter != 0:
@@ -205,7 +209,7 @@ def extract_information_house(soup):
                             square_meter_str = square_meter_str.replace('.', '', 1)
 
                         # Convert square meter to float
-                        square_meter = float(square_meter_str)
+                        square_meter = float(square_meter_str) if square_meter_str else 0.0
                         print(f"4. {square_meter}")
                         
                         # Check if square_meter is non-zero before division
@@ -302,7 +306,7 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS houses (
 # else:
 #     base_url = f"https://www.immobilienscout24.de/Suche/de/{city}/{city}/wohnung-kaufen"
 
-base_url = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/steglitz-zehlendorf/wohnung-kaufen?enteredFrom=one_step_search'
+base_url = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/wohnung-kaufen?enteredFrom=one_step_search'
 start_page = 1
 
 # Generate fake user agents
@@ -346,8 +350,6 @@ while True:
     page_source = driver.page_source
     soup = BeautifulSoup(page_source, "html.parser")
 
-    print("Stuck before extracting the prices and square meters.")
-
     special_offer_results = special_offer_container(soup)
 
     if "wohnung" in base_url:
@@ -357,22 +359,21 @@ while True:
     else:
         print('No Wohnung or Haus in the URL.')
 
-    print("Stuck before entering the database.")
     if results:
-        for i in range(len(house_data['House link'])):
-            # Check if the house link already exists in the database
-            cursor.execute('''SELECT COUNT(*) FROM houses WHERE house_link = ?''', (house_data['House link'][i],))
-            result = cursor.fetchone()
-            if result[0] == 0:
-                # If the house link doesn't exist, insert it into the database
-                cursor.execute('''INSERT INTO houses (house_link, price_per_square_meter) VALUES (?, ?)''',
-                               (house_data['House link'][i], house_data['Price per square meter [€]'][i]))
-                conn.commit()
-                new_links.append(house_data['House link'][i])
+        if len(house_data['House link']) == len(house_data['Price per square meter [€]']):
+            for i in range(len(house_data['House link'])):
+                # Check if the house link already exists in the database
+                cursor.execute('''SELECT COUNT(*) FROM houses WHERE house_link = ?''', (house_data['House link'][i],))
+                result = cursor.fetchone()
+                if result[0] == 0:
+                    # If the house link doesn't exist, insert it into the database
+                    cursor.execute('''INSERT INTO houses (house_link, price_per_square_meter) VALUES (?, ?)''',
+                                (house_data['House link'][i], house_data['Price per square meter [€]'][i]))
+                    conn.commit()
+                    new_links.append(house_data['House link'][i])
 
-        new_links.extend(house_data['House link'])
+            new_links.extend(house_data['House link'])
 
-    print("Stuck before next page.")
     # Move to the next page
     try:
         next_page = driver.find_element(By.XPATH, '//a[@aria-label="Next page" and @aria-disabled="false"]')
