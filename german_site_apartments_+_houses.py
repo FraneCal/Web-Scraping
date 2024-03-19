@@ -48,57 +48,70 @@ house_data = {
 def special_offer_container(soup):
     # Looking for special offer container
     try:
-        for _ in range(2):
-            # Show all of the offers in the special offer container
-            show_more_units = driver.find_element(By.CLASS_NAME, 'padding-left-none link-text-secondary button')
-            show_more_units.click()
+        # POPRAVI DA PROSIRI SVE
+        show_more_units = driver.find_element(By.XPATH, '//*[@id="result-p-149369723"]/div[3]/button')
+        show_more_units.click()
+        print("Show more button clicked.")
 
-        time.sleep(1)
+        time.sleep(2)
         containers = soup.find_all('div', class_='grid grid-flex grid-justify-space-between')
-        links_container = [container.find('a')['href'] for container in containers]
-        for link_container, info_container in zip(links_container, containers):
-            house_link_container = f"https://www.immobilienscout24.de{link_container}"
-            print(house_link_container)
+        for container in containers:
+            informations = container.find_all('span')
 
-            text_container = info_container.getText().strip()
-            print(text_container)
-            try:
-                if '€' in text_container:
-                    # Remove euro sign and convert to int
-                    price = int(text_container.replace('€', '').replace('.', '').replace(',', '').strip())
-                    print(price)
-                elif 'm²' in text_container:
-                    # Remove square meter sign and convert to int
-                    square_meter_str = text_container.replace('m²', '').replace(',', '').strip()
-                    print(square_meter_str)
+            # DOBIVAS DUPLIKATE, RIJESI
+            links = container.find_all('a', class_='block')
+            links_list = [f"https://www.immobilienscout24.de{link.get('href')}" for link in links]
+            #print(links_list)
 
-                    # Handle cases where dot is used as a thousand separator
-                    if '.' in square_meter_str and square_meter_str.count('.') == 1:
-                        # If there is only one dot, consider it as a thousand separator
-                        square_meter_str = square_meter_str.replace('.', '')
-                    elif '.' in square_meter_str and square_meter_str.count('.') > 1:
-                        # If there are multiple dots, keep only the last one as the decimal point
-                        square_meter_str = square_meter_str.rsplit('.', 1)[0] + square_meter_str.rsplit('.', 1)[
-                            1].replace('.', '')
+            variable = [information.getText() for information in informations]
 
-                    # Convert to float, handle the case when it's zero
-                    square_meter = float(square_meter_str) if square_meter_str else 0.0
+            # Extract price and square meter information from the correct positions
+            for i in range(0, len(variable), 2):
+                # Check if there are enough elements in the variable list
+                if i + 1 < len(variable):
+                    price_text = variable[i]
+                    square_meter_text = variable[i + 1]
+                    #print(f"0. {square_meter_text}")
 
-                    # Check if square_meter is non-zero before division
-                    if square_meter != 0:
-                        price_per_square_meter = round(price / square_meter, 2)
+                    # Check if both price and square meter information are present
+                    if price_text and square_meter_text:
+                        try:
+                            # Remove euro sign and convert price to int
+                            price = int(price_text.replace('€', '').replace('.', '').replace(',', '').strip())
 
-                        # Check if price_per_square_meter is within the specified range
-                        if 2000 <= price_per_square_meter <= 3000:
-                            # Append data to the list for saving to Excel
-                            house_data['House link'].append(house_link_container)
-                            house_data['Price per square meter [€]'].append(price_per_square_meter)
-            except:
-                print("Special offer price or the living space information is missing.")
+                            # Remove square meter sign and convert to float
+                            square_meter_str = square_meter_text.replace('m²', '').replace(',', '').strip()
+                            #print(f"1. {square_meter_str}")
 
+                             # Handle cases where dot is used as a thousand separator
+                            if '.' in square_meter_str and square_meter_str.count('.') == 1:
+                                # If there is only one dot, consider it as a thousand separator
+                                square_meter_str = square_meter_str.replace('.', '')
+                            elif '.' in square_meter_str and square_meter_str.count('.') > 1:
+                                # If there are multiple dots, keep only the last one as the decimal point
+                                square_meter_str = square_meter_str.rsplit('.', 1)[0] + square_meter_str.rsplit('.', 1)[1].replace(
+                                    '.', '')
+                                #print(f"3. {square_meter_str}")
+
+                            # Convert square meter to float
+                            square_meter = float(square_meter_str) if square_meter_str else 0.0
+                            #print(f"4. {square_meter}")
+
+                            # Check if square_meter is non-zero before division
+                            if square_meter != 0:
+                                price_per_square_meter = round(price / square_meter, 2)
+
+                                # Check if price_per_square_meter is within the specified range
+                                if 2000 <= price_per_square_meter <= 3000:
+                                    # Append data to the list for saving to Excel
+                                    house_data['House link'].extend(links_list)
+                                    house_data['Price per square meter [€]'].append(price_per_square_meter)
+                        except (ValueError, IndexError):
+                            #print("Price or the living space information is missing or invalid.")
+                            pass
     except:
-        print('No special offers found.')
-
+        pass
+    
     return house_data
 
 
@@ -169,7 +182,7 @@ def extract_information_house(soup):
             if i + 1 < len(variable):
                 price_text = variable[i]
                 square_meter_text = variable[i + 1]
-
+                print(f"0. {square_meter_text}")
                 # Check if both price and square meter information are present
                 if price_text and square_meter_text:
                     try:
@@ -177,25 +190,30 @@ def extract_information_house(soup):
                         price = int(price_text.replace('€', '').replace('.', '').replace(',', '').strip())
 
                         # Remove square meter sign and convert to float
-                        square_meter_str = square_meter_text.replace('m²', '').replace(',', '').strip()
+                        square_meter_str = square_meter_text.replace('m²', '').strip()
+    
+                        # Remove all commas
+                        square_meter_str = square_meter_str.replace(',', '.')
+                    
+                        # Replace the first dot with an empty string to prevent decimal issues
+                        if square_meter_str.count('.') == 2:
+                            square_meter_str = square_meter_str.replace('.', '', 1)
+                
 
-                        # Handle cases where dot is used as a thousand separator
-                        if '.' in square_meter_str and square_meter_str.count('.') == 1:
-                            # If there is only one dot, consider it as a thousand separator
-                            square_meter_str = square_meter_str.replace('.', '')
-                        elif '.' in square_meter_str and square_meter_str.count('.') > 1:
-                            # If there are multiple dots, keep only the last one as the decimal point
-                            square_meter_str = square_meter_str.rsplit('.', 1)[0] + square_meter_str.rsplit('.', 1)[
-                                1].replace(
-                                '.', '')
+                        # Check if there are three digits after the dot and remove the dot if true
+                        if '.' in square_meter_str and len(square_meter_str.split('.')[1]) == 3:
+                            square_meter_str = square_meter_str.replace('.', '', 1)
 
                         # Convert square meter to float
                         square_meter = float(square_meter_str)
-
+                        print(f"4. {square_meter}")
+                        
                         # Check if square_meter is non-zero before division
                         if square_meter != 0:
                             price_per_square_meter = round(price / square_meter, 2)
-
+        
+                            print(square_meter)
+            
                             # Check if price_per_square_meter is within the specified range
                             if 2000 <= price_per_square_meter <= 3000:
                                 # Append data to the list for saving to Excel
