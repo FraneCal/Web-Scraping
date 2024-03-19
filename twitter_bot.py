@@ -36,7 +36,7 @@ time.sleep(2)
 
 email = driver.find_element(By.XPATH, '//*[@id="layers"]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div/div/div/div[5]/label/div/div[2]/div/input')
 email.click()
-email.send_keys('franecalusic@outlook.com')
+email.send_keys('YOUR EMAIL')
 time.sleep(1)
 
 next_button_1 = driver.find_element(By.XPATH, '//*[@id="layers"]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div/div/div/div[6]/div')
@@ -47,7 +47,7 @@ time.sleep(1)
 try:
     user_name = driver.find_element(By.XPATH, '//*[@id="layers"]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div[2]/label/div/div[2]/div/input')
     user_name.click()
-    user_name.send_keys('John17503033017')
+    user_name.send_keys('YOUR USERNAME')
 
     next_button_2 = driver.find_element(By.XPATH, '//*[@id="layers"]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div/div/div/div')
     next_button_2.click()
@@ -57,7 +57,7 @@ except:
 
 password = driver.find_element(By.XPATH, '//*[@id="layers"]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input')
 password.click()
-password.send_keys('In71948N')
+password.send_keys('ZOUR PASSWORD')
 
 sing_in_button = driver.find_element(By.XPATH, '//*[@id="layers"]/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div[1]/div/div/div/div')
 sing_in_button.click()
