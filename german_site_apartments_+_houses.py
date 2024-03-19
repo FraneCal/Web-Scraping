@@ -79,23 +79,23 @@ def special_offer_container(soup):
                             # Remove euro sign and convert price to int
                             price = int(price_text.replace('€', '').replace('.', '').replace(',', '').strip())
 
-                            # Remove square meter sign and convert to float
-                            square_meter_str = square_meter_text.replace('m²', '').replace(',', '').strip()
-                            #print(f"1. {square_meter_str}")
+                           # Remove square meter sign and convert to float
+                            square_meter_str = square_meter_text.replace('m²', '').strip()
+        
+                            # Remove all commas
+                            square_meter_str = square_meter_str.replace(',', '.')
+                        
+                            # Replace the first dot with an empty string to prevent decimal issues
+                            if square_meter_str.count('.') == 2:
+                                square_meter_str = square_meter_str.replace('.', '', 1)
+                    
 
-                             # Handle cases where dot is used as a thousand separator
-                            if '.' in square_meter_str and square_meter_str.count('.') == 1:
-                                # If there is only one dot, consider it as a thousand separator
-                                square_meter_str = square_meter_str.replace('.', '')
-                            elif '.' in square_meter_str and square_meter_str.count('.') > 1:
-                                # If there are multiple dots, keep only the last one as the decimal point
-                                square_meter_str = square_meter_str.rsplit('.', 1)[0] + square_meter_str.rsplit('.', 1)[1].replace(
-                                    '.', '')
-                                #print(f"3. {square_meter_str}")
+                            # Check if there are three digits after the dot and remove the dot if true
+                            if '.' in square_meter_str and len(square_meter_str.split('.')[1]) == 3:
+                                square_meter_str = square_meter_str.replace('.', '', 1)
 
                             # Convert square meter to float
                             square_meter = float(square_meter_str) if square_meter_str else 0.0
-                            #print(f"4. {square_meter}")
 
                             # Check if square_meter is non-zero before division
                             if square_meter != 0:
@@ -147,7 +147,6 @@ def extract_information_apartments(soup):
 
                 # Convert square meter to float
                 square_meter = float(square_meter_str) if square_meter_str else 0.0
-                print(f"4. {square_meter}")
 
                 # Check if square_meter is non-zero before division
                 if square_meter != 0:
@@ -210,13 +209,10 @@ def extract_information_house(soup):
 
                         # Convert square meter to float
                         square_meter = float(square_meter_str) if square_meter_str else 0.0
-                        print(f"4. {square_meter}")
                         
                         # Check if square_meter is non-zero before division
                         if square_meter != 0:
                             price_per_square_meter = round(price / square_meter, 2)
-        
-                            print(square_meter)
             
                             # Check if price_per_square_meter is within the specified range
                             if 2000 <= price_per_square_meter <= 3000:
