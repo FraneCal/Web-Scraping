@@ -44,21 +44,24 @@ house_data = {
     'Price per square meter [€]': [],
 }
 
+# //*[@id="result-p-149498364"]/div[3]/button
+# //*[@id="result-p-149403793"]/div[3]/button
+# //*[@id="result-p-144591390"]/div[3]/button
 
 def special_offer_container(soup):
     # Looking for special offer container
     try:
         # POPRAVI DA PROSIRI SVE
-        show_more_units = driver.find_element(By.XPATH, '//*[@id="result-p-149369723"]/div[3]/button')
+        show_more_units = driver.find_element(By.XPATH, "//button[contains(text(), 'Einheiten anzeigen')]")
+        #show_more_units = driver.find_element(By.CLASS_NAME, 'padding-left-none link-text-secondary button')
         show_more_units.click()
         print("Show more button clicked.")
 
         time.sleep(2)
-        containers = soup.find_all('div', class_='grid grid-flex grid-justify-space-between')
+        containers = soup.find_all('div', class_='grid-item palm-one-whole lap-one-half desk-one-half grouped-listing-frame')
         for container in containers:
             informations = container.find_all('span')
 
-            # DOBIVAS DUPLIKATE, RIJESI
             links = container.find_all('a', class_='block')
             links_list = [f"https://www.immobilienscout24.de{link.get('href')}" for link in links]
             #print(links_list)
@@ -100,6 +103,9 @@ def special_offer_container(soup):
                             # Check if square_meter is non-zero before division
                             if square_meter != 0:
                                 price_per_square_meter = round(price / square_meter, 2)
+                                print(price)
+                                print(square_meter)
+                                print(price_per_square_meter)
 
                                 # Check if price_per_square_meter is within the specified range
                                 if 2000 <= price_per_square_meter <= 3000:
@@ -110,7 +116,7 @@ def special_offer_container(soup):
                             #print("Price or the living space information is missing or invalid.")
                             pass
     except:
-        pass
+        print('No button to "Show more".')
     
     return house_data
 
@@ -402,6 +408,7 @@ driver.quit()
 # Send email with all new links
 if new_links:
     send_email(new_links)
+
 
 
 
