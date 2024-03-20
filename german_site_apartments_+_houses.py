@@ -43,80 +43,75 @@ house_data = {
     'Price per square meter [€]': [],
 }
 
-# //*[@id="result-p-149498364"]/div[3]/button
-# //*[@id="result-p-149403793"]/div[3]/button
-# //*[@id="result-p-144591390"]/div[3]/button
-
 def special_offer_container(soup):
     # Looking for special offer container
-    try:
-        # POPRAVI DA PROSIRI SVE
-        show_more_units = driver.find_element(By.XPATH, "//button[contains(text(), 'Einheiten anzeigen')]")
-        #show_more_units = driver.find_element(By.CLASS_NAME, 'padding-left-none link-text-secondary button')
-        show_more_units.click()
-        print("Show more button clicked.")
+    wait = WebDriverWait(driver, 5)
+    while True:
+        try:
+            wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "article button.button"))).click()
 
-        time.sleep(2)
-        containers = soup.find_all('div', class_='grid-item palm-one-whole lap-one-half desk-one-half grouped-listing-frame')
-        for container in containers:
-            informations = container.find_all('span')
+        except TimeoutException:
+            break
 
-            links = container.find_all('a', class_='block')
-            links_list = [f"https://www.immobilienscout24.de{link.get('href')}" for link in links]
-            #print(links_list)
+    time.sleep(2)
+    containers = soup.find_all('div',
+                               class_='grid-item palm-one-whole lap-one-half desk-one-half grouped-listing-frame')
+    for container in containers:
+        informations = container.find_all('span')
 
-            variable = [information.getText() for information in informations]
+        links = container.find_all('a', class_='block')
+        links_list = [f"https://www.immobilienscout24.de{link.get('href')}" for link in links]
+        # print(links_list)
 
-            # Extract price and square meter information from the correct positions
-            for i in range(0, len(variable), 2):
-                # Check if there are enough elements in the variable list
-                if i + 1 < len(variable):
-                    price_text = variable[i]
-                    square_meter_text = variable[i + 1]
-                    #print(f"0. {square_meter_text}")
+        variable = [information.getText() for information in informations]
 
-                    # Check if both price and square meter information are present
-                    if price_text and square_meter_text:
-                        try:
-                            # Remove euro sign and convert price to int
-                            price = int(price_text.replace('€', '').replace('.', '').replace(',', '').strip())
+        # Extract price and square meter information from the correct positions
+        for i in range(0, len(variable), 2):
+            # Check if there are enough elements in the variable list
+            if i + 1 < len(variable):
+                price_text = variable[i]
+                square_meter_text = variable[i + 1]
+                # print(f"0. {square_meter_text}")
 
-                           # Remove square meter sign and convert to float
-                            square_meter_str = square_meter_text.replace('m²', '').strip()
-        
-                            # Remove all commas
-                            square_meter_str = square_meter_str.replace(',', '.')
-                        
-                            # Replace the first dot with an empty string to prevent decimal issues
-                            if square_meter_str.count('.') == 2:
-                                square_meter_str = square_meter_str.replace('.', '', 1)
-                    
+                # Check if both price and square meter information are present
+                if price_text and square_meter_text:
+                    try:
+                        # Remove euro sign and convert price to int
+                        price = int(price_text.replace('€', '').replace('.', '').replace(',', '').strip())
 
-                            # Check if there are three digits after the dot and remove the dot if true
-                            if '.' in square_meter_str and len(square_meter_str.split('.')[1]) == 3:
-                                square_meter_str = square_meter_str.replace('.', '', 1)
+                        # Remove square meter sign and convert to float
+                        square_meter_str = square_meter_text.replace('m²', '').strip()
 
-                            # Convert square meter to float
-                            square_meter = float(square_meter_str) if square_meter_str else 0.0
+                        # Remove all commas
+                        square_meter_str = square_meter_str.replace(',', '.')
 
-                            # Check if square_meter is non-zero before division
-                            if square_meter != 0:
-                                price_per_square_meter = round(price / square_meter, 2)
-                                print(price)
-                                print(square_meter)
-                                print(price_per_square_meter)
+                        # Replace the first dot with an empty string to prevent decimal issues
+                        if square_meter_str.count('.') == 2:
+                            square_meter_str = square_meter_str.replace('.', '', 1)
 
-                                # Check if price_per_square_meter is within the specified range
-                                if 2000 <= price_per_square_meter <= 3000:
-                                    # Append data to the list for saving to Excel
-                                    house_data['House link'].extend(links_list)
-                                    house_data['Price per square meter [€]'].append(price_per_square_meter)
-                        except (ValueError, IndexError):
-                            #print("Price or the living space information is missing or invalid.")
-                            pass
-    except:
-        print('No button to "Show more".')
-    
+                        # Check if there are three digits after the dot and remove the dot if true
+                        if '.' in square_meter_str and len(square_meter_str.split('.')[1]) == 3:
+                            square_meter_str = square_meter_str.replace('.', '', 1)
+
+                        # Convert square meter to float
+                        square_meter = float(square_meter_str) if square_meter_str else 0.0
+
+                        # Check if square_meter is non-zero before division
+                        if square_meter != 0:
+                            price_per_square_meter = round(price / square_meter, 2)
+                            print(price)
+                            print(square_meter)
+                            print(price_per_square_meter)
+
+                            # Check if price_per_square_meter is within the specified range
+                            if 2000 <= price_per_square_meter <= 3000:
+                                # Append data to the list for saving to Excel
+                                house_data['House link'].extend(links_list)
+                                house_data['Price per square meter [€]'].append(price_per_square_meter)
+                    except (ValueError, IndexError):
+                        # print("Price or the living space information is missing or invalid.")
+                        pass
+
     return house_data
 
 
@@ -140,11 +135,10 @@ def extract_information_apartments(soup):
 
                 # Remove all commas
                 square_meter_str = square_meter_str.replace(',', '.')
-            
+
                 # Replace the first dot with an empty string to prevent decimal issues
                 if square_meter_str.count('.') == 2:
                     square_meter_str = square_meter_str.replace('.', '', 1)
-        
 
                 # Check if there are three digits after the dot and remove the dot if true
                 if '.' in square_meter_str and len(square_meter_str.split('.')[1]) == 3:
@@ -199,14 +193,13 @@ def extract_information_house(soup):
 
                         # Remove square meter sign and convert to float
                         square_meter_str = square_meter_text.replace('m²', '').strip()
-    
+
                         # Remove all commas
                         square_meter_str = square_meter_str.replace(',', '.')
-                    
+
                         # Replace the first dot with an empty string to prevent decimal issues
                         if square_meter_str.count('.') == 2:
                             square_meter_str = square_meter_str.replace('.', '', 1)
-                
 
                         # Check if there are three digits after the dot and remove the dot if true
                         if '.' in square_meter_str and len(square_meter_str.split('.')[1]) == 3:
@@ -214,18 +207,18 @@ def extract_information_house(soup):
 
                         # Convert square meter to float
                         square_meter = float(square_meter_str) if square_meter_str else 0.0
-                        
+
                         # Check if square_meter is non-zero before division
                         if square_meter != 0:
                             price_per_square_meter = round(price / square_meter, 2)
-            
+
                             # Check if price_per_square_meter is within the specified range
                             if 2000 <= price_per_square_meter <= 3000:
                                 # Append data to the list for saving to Excel
                                 house_data['House link'].extend(links_list)
                                 house_data['Price per square meter [€]'].append(price_per_square_meter)
                     except (ValueError, IndexError):
-                        #print("Price or the living space information is missing or invalid.")
+                        # print("Price or the living space information is missing or invalid.")
                         pass
 
     return house_data
@@ -369,7 +362,7 @@ while True:
                 if result[0] == 0:
                     # If the house link doesn't exist, insert it into the database
                     cursor.execute('''INSERT INTO houses (house_link, price_per_square_meter) VALUES (?, ?)''',
-                                (house_data['House link'][i], house_data['Price per square meter [€]'][i]))
+                                   (house_data['House link'][i], house_data['Price per square meter [€]'][i]))
                     conn.commit()
                     new_links.append(house_data['House link'][i])
 
