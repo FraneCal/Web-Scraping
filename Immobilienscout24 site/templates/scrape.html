@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Scraping</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .title-margin-top {
+            margin-top: 20px;
+        }
+
+        .logout-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('login') }}" class="btn btn-danger logout-button">Logout</a>
+
+        <h2 class="title-margin-top">Start Scraping</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form method="POST" action="{{ url_for('scrape') }}">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                <label for="city">City:</label>
+                <input type="text" class="form-control" id="city" name="city" required>
+            </div>
+            <div class="form-group">
+                <label for="subregion">Subregion (optional):</label>
+                <input type="text" class="form-control" id="subregion" name="subregion">
+            </div>
+            <div class="form-group">
+                <label for="apart_or_house">Buying (Wohnung or Haus):</label>
+                <input type="text" class="form-control" id="apart_or_house" name="apart_or_house" required>
+            </div>
+            <div class="form-group">
+                <label for="words_to_check">Words to Check (optional):</label>
+                <input type="text" class="form-control" id="words_to_check" name="words_to_check">
+                <small class="form-text text-muted">Enter words to check (separated by comma).</small>
+            </div>
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">Start Scraping</button>
+                <a href="{{ url_for('view_database') }}" class="btn btn-info">View Database</a>
+            </div>
+        </form>
+        {% if session.get('scraping_started') %}
+            <div class="alert alert-success">Scraping started!</div>
+        {% endif %}
+        {% if session.get('scraping_finished') %}
+            <div class="alert alert-info">Scraper has finished!</div>
+        {% endif %}
+    </div>
+</body>
+</html>
