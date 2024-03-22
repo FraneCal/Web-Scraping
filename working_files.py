@@ -29,41 +29,14 @@ def solve_captcha_slider(driver):
     page_source = driver.page_source
     soup = BeautifulSoup(page_source, "html.parser")
 
-    canvas_elements = soup.find_all('div', class_='geetest_slicebg geetest_absolute')
-    print(canvas_elements)
+    background_image = soup.find('canvas', class_='geetest_canvas_bg geetest_absolute')
+    slice_image = soup.find('canvas', class_='geetest_canvas_slice geetest_absolute')
 
-    for canvas in canvas_elements:
-        # Extract the base64-encoded image data from the canvas element
-        base64_data = canvas.get_attribute('toDataURL')  # Assuming canvas.toDataURL() is used to encode the image
+    background_image_data = requests.get(background_image).content
+    slice_image_data = requests.get(slice_image).content
 
-        # Extract only the base64-encoded image data part
-        base64_image = base64_data.split(',')[1]
-
-        # Decode the base64-encoded data
-        image_data = base64.b64decode(base64_image)
-
-        # Open the image using PIL
-        image = Image.open(BytesIO(image_data))
-
-        # Determine the filename based on the canvas class
-        if 'geetest_canvas_bg' in canvas['class']:
-            filename = 'background.png'
-        elif 'geetest_canvas_slice' in canvas['class']:
-            filename = 'piece.png'
-        else:
-            # Handle other canvas classes if needed
-            continue
-
-        # Save the image with the specified filename
-        image.save(filename)  # Save the image as PNG format (you can change the format as needed)
-
-    try:
-        slider = driver.find_element(By.CLASS_NAME, 'geetest_slider_button')
-        for x in range(0, 260, 43):
-            actions.move_to_element(slider).click_and_hold().move_by_offset(x, 0).release().perform()
-            time.sleep(0.5)
-    except:
-        print('No slider found. Continuing with the code.')
+    with open ('background_image.png', 'wb') as handler:
+        handler.write(background_image_data)
 
 
 def accept_cookies(driver):
