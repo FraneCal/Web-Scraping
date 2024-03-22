@@ -14,9 +14,49 @@ import sqlite3
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from flask import session
+import base64
+from PIL import Image
+from io import BytesIO
+import sys
+import re
 
+# <div class="geetest_slicebg geetest_absolute">
+# <canvas class="geetest_canvas_bg geetest_absolute" height="160" width="260"></canvas>
+# <canvas class="geetest_canvas_slice geetest_absolute" width="260" height="160"></canvas>
 
 def solve_captcha_slider(driver):
+    page_source = driver.page_source
+    soup = BeautifulSoup(page_source, "html.parser")
+
+    canvas_elements = soup.find_all('div', class_='geetest_slicebg geetest_absolute')
+    print(canvas_elements)
+
+    for canvas in canvas_elements:
+        # Extract the base64-encoded image data from the canvas element
+        base64_data = canvas.get_attribute('toDataURL')  # Assuming canvas.toDataURL() is used to encode the image
+
+        # Extract only the base64-encoded image data part
+        base64_image = base64_data.split(',')[1]
+
+        # Decode the base64-encoded data
+        image_data = base64.b64decode(base64_image)
+
+        # Open the image using PIL
+        image = Image.open(BytesIO(image_data))
+
+        # Determine the filename based on the canvas class
+        if 'geetest_canvas_bg' in canvas['class']:
+            filename = 'background.png'
+        elif 'geetest_canvas_slice' in canvas['class']:
+            filename = 'piece.png'
+        else:
+            # Handle other canvas classes if needed
+            continue
+
+        # Save the image with the specified filename
+        image.save(filename)  # Save the image as PNG format (you can change the format as needed)
+
     try:
         slider = driver.find_element(By.CLASS_NAME, 'geetest_slider_button')
         for x in range(0, 260, 43):
@@ -181,7 +221,6 @@ def extract_information_house(soup):
             if i + 1 < len(variable):
                 price_text = variable[i]
                 square_meter_text = variable[i + 1]
-                print(f"0. {square_meter_text}")
                 # Check if both price and square meter information are present
                 if price_text and square_meter_text:
                     try:
@@ -250,18 +289,23 @@ def check_words_in_link_content(cursor, exclude_words):
         link = link_row[0]
         # Scrape the content of the link using BeautifulSoup
         driver.get(link)
-
         time.sleep(2)
-
         page_source = driver.page_source
         soup = BeautifulSoup(page_source, "html.parser")
-        text_content = soup.get_text()
-
+        
+        # Extract text content and clean it
+        text_content = soup.get_text(strip=True)
+        text_content = re.sub(r'\s+', ' ', text_content)  # Remove extra whitespaces
+        
         # Check if the link contains any of the exclude words
         if any(word.lower() in text_content.lower() for word in exclude_words):
             # If any exclude word is found, remove the link from the database
-            cursor.execute('''DELETE FROM houses WHERE house_link = ?''', (link,))
-            print(f"Link removed from database: {link}")
+            try:
+                cursor.execute('''DELETE FROM houses WHERE house_link = ?''', (link,))
+                conn.commit()  # Commit the transaction
+                print(f"Link removed from database: {link}")
+            except sqlite3.Error as e:
+                print(f"Error occurred while deleting link: {e}")
 
 
 # Create SQLite connection and cursor
@@ -282,22 +326,23 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS houses (
 #         break
 #     else:
 #         print("City name cannot be empty. Please enter a valid city name.")
-#
+
 # subregion = input("Enter the subregion (optional, press Enter to skip): ").lower()
-#
+
 # while True:
 #     apart_or_house = input("Enter what you are buying (wohnung or haus): ").lower()
 #     if apart_or_house == "wohnung" or apart_or_house == "haus":
 #         break
 #     else:
 #         print("Please enter either 'wohnung' or 'haus'.")
-#
+
 # if subregion:
 #     base_url = f"https://www.immobilienscout24.de/Suche/de/{city}/{city}/{subregion}/wohnung-kaufen"
 # else:
 #     base_url = f"https://www.immobilienscout24.de/Suche/de/{city}/{city}/wohnung-kaufen"
 
 base_url = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/wohnung-kaufen?enteredFrom=one_step_search'
+#base_url = sys.argv[4]
 
 start_page = 1
 
@@ -318,12 +363,12 @@ driver.get(base_url)
 captcha = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, 'geetest_radar_tip')))
 captcha.click()
 
-#time.sleep(100)
+time.sleep(4)
 
 # Solve captcha slider
 solve_captcha_slider(driver)
 
-time.sleep(2)
+time.sleep(4)
 
 # Accept cookies
 accept_cookies(driver)
@@ -365,7 +410,7 @@ while True:
 
     # Move to the next page
     try:
-        next_page = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//a[@aria-label="Next page" and @aria-disabled="false"]')))
+        next_page = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, '//a[@aria-label="Next page" and @aria-disabled="false"]')))
         next_page.click()
     except:
         print('No more pages to click.')
@@ -386,7 +431,8 @@ while True:
     # time.sleep(3)
 
 # Check if any links need to be removed based on their content
-check_words_in_link_content(cursor, ["Zwangsversteigerungen", "Dachrohling"])
+exclude_words = ["Hello"]
+check_words_in_link_content(cursor, exclude_words)
 
 # Close the connection and quit the driver
 conn.close()
