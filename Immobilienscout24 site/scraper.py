@@ -258,8 +258,6 @@ def check_words_in_link_content(cursor, exclude_words):
         # Extract text content and clean it
         text_content = soup.get_text(strip=True)
         text_content = re.sub(r'\s+', ' ', text_content)  # Remove extra whitespaces
-
-        print(text_content)
         
         # Check if the link contains any of the exclude words
         if any(word.lower() in text_content.lower() for word in exclude_words):
@@ -396,7 +394,7 @@ while True:
     # time.sleep(3)
 
 # Check if any links need to be removed based on their content
-exclude_words = sys.argv[5]
+exclude_words = [sys.argv[5]]
 check_words_in_link_content(cursor, exclude_words)
 
 # Close the connection and quit the driver
