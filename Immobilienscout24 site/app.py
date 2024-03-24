@@ -6,6 +6,9 @@ import threading
 import subprocess
 import os
 import sqlite3
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -18,11 +21,14 @@ class LoginForm(FlaskForm):
 class ScrapingForm(FlaskForm):
     start_scraping = SubmitField('Start Scraping')
 
+admin_username = os.getenv("ADMIN_USERNAME")
+admin_password = os.getenv("ADMIN_PASSWORD")
+
 @app.route('/', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        if form.username.data == 'admin' and form.password.data == 'admin':
+        if form.username.data == admin_username and form.password.data == admin_password:
             return redirect(url_for('scrape'))
         else:
             flash('Invalid username or password', 'error')
