@@ -20,54 +20,43 @@ from PIL import Image
 from io import BytesIO
 import sys
 import re
+from solver import PuzleSolver
 
-# <div class="geetest_slicebg geetest_absolute">
-# <canvas class="geetest_canvas_bg geetest_absolute" height="160" width="260"></canvas>
-# <canvas class="geetest_canvas_slice geetest_absolute" width="260" height="160"></canvas>
 
 def solve_captcha_slider(driver):
-    page_source = driver.page_source
-    soup = BeautifulSoup(page_source, "html.parser")
+    # Execute JavaScript to get the Base64-encoded image data
+    background_image_data = driver.execute_script(
+        "return arguments[0].toDataURL('image/png').substring(21);",
+        driver.find_element(By.CSS_SELECTOR, ".geetest_canvas_bg.geetest_absolute")
+    )
+    slice_image_data = driver.execute_script(
+        "return arguments[0].toDataURL('image/png').substring(21);",
+        driver.find_element(By.CSS_SELECTOR, ".geetest_canvas_slice.geetest_absolute")
+    )
 
-    background_image = soup.find('canvas', class_='geetest_canvas_bg geetest_absolute')
-    slice_image = soup.find('canvas', class_='geetest_canvas_slice geetest_absolute')
+    # Decode the Base64-encoded image data into bytes
+    background_image_bytes = base64.b64decode(background_image_data)
+    slice_image_bytes = base64.b64decode(slice_image_data)
 
-    background_image_data = requests.get(background_image).content
-    slice_image_data = requests.get(slice_image).content
+    # Save the images to files
+    with open('background.png', 'wb') as background_file:
+        background_file.write(background_image_bytes)
 
-    with open ('background_image.png', 'wb') as handler:
-        handler.write(background_image_data)
+    with open('piece.png', 'wb') as piece_file:
+        piece_file.write(slice_image_bytes)
 
-# def solve_captcha_slider(driver):
-#     # Execute JavaScript to get the Base64-encoded image data
-#     background_image_data = driver.execute_script(
-#         "return arguments[0].toDataURL('image/png').substring(21);",
-#         driver.find_element(By.CSS_SELECTOR, ".geetest_canvas_bg.geetest_absolute")
-#     )
-#     slice_image_data = driver.execute_script(
-#         "return arguments[0].toDataURL('image/png').substring(21);",
-#         driver.find_element(By.CSS_SELECTOR, ".geetest_canvas_slice.geetest_absolute")
-#     )
-
-#     # Decode the Base64-encoded image data into bytes
-#     background_image_bytes = base64.b64decode(background_image_data)
-#     slice_image_bytes = base64.b64decode(slice_image_data)
-
-#     # Save the images to files
-#     with open('background.png', 'wb') as background_file:
-#         background_file.write(background_image_bytes)
-
-#     with open('piece.png', 'wb') as piece_file:
-#         piece_file.write(slice_image_bytes)
+    solver = PuzleSolver("piece.png", "background.png")
+    solution = solver.get_position()
+    print(solution)
 
 
-#     try:
-#         slider = driver.find_element(By.CLASS_NAME, 'geetest_slider_button')
-#         for x in range(0, 260, 43):
-#             actions.move_to_element(slider).click_and_hold().move_by_offset(x, 0).release().perform()
-#             time.sleep(0.5)
-#     except:
-#         print('No slider found. Continuing with the code.')
+    try:
+        slider = driver.find_element(By.CLASS_NAME, 'geetest_slider_button')
+        for x in range(0, 260, 43):
+            actions.move_to_element(slider).click_and_hold().move_by_offset(x, 0).release().perform()
+            time.sleep(0.5)
+    except:
+        print('No slider found. Continuing with the code.')
 
 
 def accept_cookies(driver):
@@ -150,7 +139,6 @@ def special_offer_container(soup):
                                 house_data['Price per square meter [€]'].append(price_per_square_meter)
 
                     except (ValueError, IndexError):
-                        # print("Price or the living space information is missing or invalid.")
                         pass
 
     return house_data
@@ -258,7 +246,6 @@ def extract_information_house(soup):
                                 house_data['House link'].extend(links_list)
                                 house_data['Price per square meter [€]'].append(price_per_square_meter)
                     except (ValueError, IndexError):
-                        # print("Price or the living space information is missing or invalid.")
                         pass
 
     return house_data
@@ -323,30 +310,7 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS houses (
                     price_per_square_meter REAL
                 )''')
 
-# Ask the user for input
-# while True:
-#     city = input("Enter the city you want to search for: ").lower()
-#     if city != "":
-#         break
-#     else:
-#         print("City name cannot be empty. Please enter a valid city name.")
-
-# subregion = input("Enter the subregion (optional, press Enter to skip): ").lower()
-
-# while True:
-#     apart_or_house = input("Enter what you are buying (wohnung or haus): ").lower()
-#     if apart_or_house == "wohnung" or apart_or_house == "haus":
-#         break
-#     else:
-#         print("Please enter either 'wohnung' or 'haus'.")
-
-# if subregion:
-#     base_url = f"https://www.immobilienscout24.de/Suche/de/{city}/{city}/{subregion}/wohnung-kaufen"
-# else:
-#     base_url = f"https://www.immobilienscout24.de/Suche/de/{city}/{city}/wohnung-kaufen"
-
 base_url = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/wohnung-kaufen?enteredFrom=one_step_search'
-#base_url = sys.argv[4]
 
 start_page = 1
 
@@ -420,19 +384,8 @@ while True:
         print('No more pages to click.')
         break
 
-    # # Move to the next page
-    # current_page += 1
-    # next_url = f'{base_url}?pagenumber={current_page}'
-    # driver.get(next_url)
-
-    # # Extract and print the current page number
-    # print(f"Scraping page number: {current_page}")
-
     house_data['House link'].clear()
     house_data['Price per square meter [€]'].clear()
-
-    # Add a delay to avoid being blocked by the website
-    # time.sleep(3)
 
 # Check if any links need to be removed based on their content
 exclude_words = ["Hello"]
