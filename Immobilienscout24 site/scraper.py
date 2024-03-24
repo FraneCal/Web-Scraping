@@ -16,7 +16,10 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import sys
 import re
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 def solve_captcha_slider(driver):
     try:
@@ -223,12 +226,12 @@ def extract_information_house(soup):
 
 
 def send_email(new_links):
-    my_email = "franecalusic94@gmail.com"
-    password = "jmyxbqpbrzlteway"
+    my_email = os.getenv("MY_EMAIL")
+    password = os.getenv("PASSWORD")
 
     message = MIMEMultipart()
     message['From'] = my_email
-    message['To'] = 'fcalus00@fesb.hr'
+    message['To'] = os.getenv("RECIPIENT_EMAIL")
     message['Subject'] = 'New Apartments Added'
 
     body = "\n".join(new_links)
