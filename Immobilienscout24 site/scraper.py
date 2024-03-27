@@ -14,14 +14,42 @@ import sqlite3
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import sys
+from flask import session
+import base64
 import re
+import sys
+from solver import PuzleSolver
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
 def solve_captcha_slider(driver):
+    # Execute JavaScript to get the Base64-encoded image data
+    background_image_data = driver.execute_script(
+        "return arguments[0].toDataURL('image/png').substring(21);",
+        driver.find_element(By.CSS_SELECTOR, ".geetest_canvas_bg.geetest_absolute")
+    )
+    slice_image_data = driver.execute_script(
+        "return arguments[0].toDataURL('image/png').substring(21);",
+        driver.find_element(By.CSS_SELECTOR, ".geetest_canvas_slice.geetest_absolute")
+    )
+
+    # Decode the Base64-encoded image data into bytes
+    background_image_bytes = base64.b64decode(background_image_data)
+    slice_image_bytes = base64.b64decode(slice_image_data)
+
+    # Save the images to files
+    with open('background.png', 'wb') as background_file:
+        background_file.write(background_image_bytes)
+
+    with open('piece.png', 'wb') as piece_file:
+        piece_file.write(slice_image_bytes)
+
+    solver = PuzleSolver("piece.png", "background.png")
+    solution = solver.get_position()
+    print(solution)
+
     try:
         slider = driver.find_element(By.CLASS_NAME, 'geetest_slider_button')
         for x in range(0, 260, 43):
@@ -67,6 +95,7 @@ def special_offer_container(soup):
 
         links = container.find_all('a', class_='block')
         links_list = [f"https://www.immobilienscout24.de{link.get('href')}" for link in links]
+        links_set = set(links_list)
 
         variable = [information.getText() for information in informations]
 
@@ -107,7 +136,7 @@ def special_offer_container(soup):
                             # Check if price_per_square_meter is within the specified range
                             if 2000 <= price_per_square_meter <= 3000:
                                 # Append data to the list for saving to Excel
-                                house_data['House link'].extend(links_list)
+                                house_data['House link'].extend(links_set)
                                 house_data['Price per square meter [€]'].append(price_per_square_meter)
 
                     except (ValueError, IndexError):
@@ -118,48 +147,53 @@ def special_offer_container(soup):
 
 
 def extract_information_apartments(soup):
-    # Find links inside the information div
-    information = soup.find_all('dd', class_='font-highlight font-tabular')
-    links = [info.find_previous('div', class_='grid-item').find('a')['href'] for info in information]
+    try:
+        # Find links inside the information div
+        information = soup.find_all('dd', class_='font-highlight font-tabular')
+        links = [info.find_previous('div', class_='grid-item').find('a')['href'] for info in information]
 
-    for link, info in zip(links, information):
-        house_link = f"https://www.immobilienscout24.de{link}"
+        for link, info in zip(links, information):
+            house_link = f"https://www.immobilienscout24.de{link}"
 
-        # Extract and print only the prices and square meters
-        text = info.getText().strip()
-        try:
-            if '€' in text:
-                # Remove euro sign and convert to int
-                price = int(text.replace('€', '').replace('.', '').replace(',', '').strip())
-            elif 'm²' in text:
-                # Remove square meter sign and convert to float
-                square_meter_str = text.replace('m²', '').strip()
+            # Extract and print only the prices and square meters
+            text = info.getText().strip()
+            try:
+                if '€' in text:
+                    # Remove euro sign and convert to int
+                    price = int(text.replace('€', '').replace('.', '').replace(',', '').strip())
+                elif 'm²' in text:
+                    # Remove square meter sign and convert to float
+                    square_meter_str = text.replace('m²', '').strip()
 
-                # Remove all commas
-                square_meter_str = square_meter_str.replace(',', '.')
+                    # Remove all commas
+                    square_meter_str = square_meter_str.replace(',', '.')
 
-                # Replace the first dot with an empty string to prevent decimal issues
-                if square_meter_str.count('.') == 2:
-                    square_meter_str = square_meter_str.replace('.', '', 1)
+                    # Replace the first dot with an empty string to prevent decimal issues
+                    if square_meter_str.count('.') == 2:
+                        square_meter_str = square_meter_str.replace('.', '', 1)
 
-                # Check if there are three digits after the dot and remove the dot if true
-                if '.' in square_meter_str and len(square_meter_str.split('.')[1]) == 3:
-                    square_meter_str = square_meter_str.replace('.', '', 1)
+                    # Check if there are three digits after the dot and remove the dot if true
+                    if '.' in square_meter_str and len(square_meter_str.split('.')[1]) == 3:
+                        square_meter_str = square_meter_str.replace('.', '', 1)
 
-                # Convert square meter to float
-                square_meter = float(square_meter_str) if square_meter_str else 0.0
+                    # Convert square meter to float
+                    square_meter = float(square_meter_str) if square_meter_str else 0.0
 
-                # Check if square_meter is non-zero before division
-                if square_meter != 0:
-                    price_per_square_meter = round(price / square_meter, 2)
+                    # Check if square_meter is non-zero before division
+                    if square_meter != 0:
+                        price_per_square_meter = round(price / square_meter, 2)
 
-                    # Check if price_per_square_meter is within the specified range
-                    if 2000 <= price_per_square_meter <= 3000:
-                        # Append data to the list for saving to Excel
-                        house_data['House link'].append(house_link)
-                        house_data['Price per square meter [€]'].append(price_per_square_meter)
-        except:
-            print("Price or the living space information is missing.")
+                        # Check if price_per_square_meter is within the specified range
+                        if 2000 <= price_per_square_meter <= 3000:
+                            # Append data to the list for saving to Excel
+                            house_data['House link'].append(house_link)
+                            house_data['Price per square meter [€]'].append(price_per_square_meter)
+            except Exception as e:
+                print(f"Error occurred: {e}")
+                print("Price or the living space information is missing.")
+
+    except Exception as e:
+        print(f"Error occurred while extracting links: {e}")
 
     return house_data
 
@@ -176,6 +210,7 @@ def extract_information_house(soup):
         # Extract links from a elements within the container
         links = container.find_all('a')
         links_list = [f"https://www.immobilienscout24.de{link.get('href')}" for link in links]
+        links_set = set(links_list)
 
         # Extract text from dd elements
         variable = [information.getText() for information in informations]
@@ -216,8 +251,9 @@ def extract_information_house(soup):
                             # Check if price_per_square_meter is within the specified range
                             if 2000 <= price_per_square_meter <= 3000:
                                 # Append data to the list for saving to Excel
-                                house_data['House link'].extend(links_list)
+                                house_data['House link'].extend(links_set)
                                 house_data['Price per square meter [€]'].append(price_per_square_meter)
+
                     except (ValueError, IndexError):
                         # print("Price or the living space information is missing or invalid.")
                         pass
@@ -284,31 +320,7 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS houses (
                     price_per_square_meter REAL
                 )''')
 
-# Ask the user for input
-# while True:
-#     city = input("Enter the city you want to search for: ").lower()
-#     if city != "":
-#         break
-#     else:
-#         print("City name cannot be empty. Please enter a valid city name.")
-
-# subregion = input("Enter the subregion (optional, press Enter to skip): ").lower()
-
-# while True:
-#     apart_or_house = input("Enter what you are buying (wohnung or haus): ").lower()
-#     if apart_or_house == "wohnung" or apart_or_house == "haus":
-#         break
-#     else:
-#         print("Please enter either 'wohnung' or 'haus'.")
-
-# if subregion:
-#     base_url = f"https://www.immobilienscout24.de/Suche/de/{city}/{city}/{subregion}/wohnung-kaufen"
-# else:
-#     base_url = f"https://www.immobilienscout24.de/Suche/de/{city}/{city}/wohnung-kaufen"
-
-#base_url = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/wohnung-kaufen?enteredFrom=one_step_search'
 base_url = sys.argv[4]
-print(base_url)
 
 start_page = 1
 
@@ -332,9 +344,9 @@ captcha.click()
 time.sleep(4)
 
 # Solve captcha slider
-solve_captcha_slider(driver)
+#solve_captcha_slider(driver)
 
-time.sleep(5)
+time.sleep(4)
 
 # Accept cookies
 accept_cookies(driver)
@@ -376,25 +388,17 @@ while True:
 
     # Move to the next page
     try:
-        next_page = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, '//a[@aria-label="Next page" and @aria-disabled="false"]')))
+        next_page = driver.find_element(By.XPATH, '//a[@aria-label="Next page" and @aria-disabled="false"]')
         next_page.click()
     except:
         print('No more pages to click.')
         break
 
-    # # Move to the next page
-    # current_page += 1
-    # next_url = f'{base_url}?pagenumber={current_page}'
-    # driver.get(next_url)
-
-    # # Extract and print the current page number
-    # print(f"Scraping page number: {current_page}")
-
     house_data['House link'].clear()
     house_data['Price per square meter [€]'].clear()
 
-    # Add a delay to avoid being blocked by the website
-    # time.sleep(3)
+    time.sleep(3)
+
 
 # Check if any links need to be removed based on their content
 exclude_words = [sys.argv[5]]
