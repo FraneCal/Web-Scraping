@@ -92,7 +92,6 @@ def special_offer_container(soup):
         links = container.find_all('a', class_='block')
         links_list = [f"https://www.immobilienscout24.de{link.get('href')}" for link in links]
         links_set = set(links_list)
-        print(links_set)
 
         variable = [information.getText() for information in informations]
 
