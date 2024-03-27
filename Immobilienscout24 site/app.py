@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, g
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g, app
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import InputRequired, EqualTo
@@ -42,17 +42,15 @@ def scrape():
         city = request.form.get('city')
         subregion = request.form.get('subregion')
         apart_or_house = request.form.get('apart_or_house')
-        words_to_check = request.form.get('words_to_check')  # Retrieve words to check input
+        words_to_check = request.form.get('words_to_check')
 
         if city and apart_or_house:
+            session['scraping_started'] = True  # Set session variable
             g.scraping_finished = False
             threading.Thread(target=run_scraper, args=(city, subregion, apart_or_house, words_to_check)).start() 
             flash('Scraping started!', 'success')
         else:
             flash('Please fill all required fields.', 'error')
-
-    if g.get('scraping_finished', False):
-        flash('Scraper has finished!', 'info')
 
     return render_template('scrape.html', form=form)
 
@@ -61,6 +59,11 @@ def scrape():
 def view_database():
     database_contents = get_database_contents()
     return render_template('view_database.html', database_contents=database_contents)
+
+
+@app.route('/scraping-finished')
+def scraping_finished():
+    return render_template('scraping_finished.html')
 
 
 def run_scraper(city, subregion, apart_or_house, words_to_check):
@@ -88,10 +91,13 @@ def run_scraper(city, subregion, apart_or_house, words_to_check):
         base_url = f"https://www.immobilienscout24.de/Suche/de/{city}/{city}/{apart_or_house}-kaufen"
 
     # Run the scraper script with the provided inputs and base_url
-    subprocess.run(['python', 'scraper.py', city, subregion, apart_or_house, base_url, words_to_check])
+    #subprocess.run(['python', 'scraper.py', city, subregion, apart_or_house, base_url, words_to_check])
+    subprocess.run(['python', 'test_file.py'])
 
-    return redirect(url_for('scrape'))
-
+    # with app.app_context():
+    #     return redirect(url_for('scraping_finished'))
+    with app.app_context():
+        return redirect(url_for('scraping_finished'))
 
 def get_database_contents():
     conn = sqlite3.connect('database.db')
@@ -100,7 +106,6 @@ def get_database_contents():
     database_contents = cursor.fetchall()
     conn.close()
     return database_contents
-
 
 
 if __name__ == '__main__':
