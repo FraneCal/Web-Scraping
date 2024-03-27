@@ -22,7 +22,7 @@
         <a href="{{ url_for('login') }}" class="btn btn-danger logout-button">Logout</a>
 
         <h2 class="title-margin-top">Start Scraping</h2>
-        {% with messages = get_flashed_messages(with_categories=true) %}
+        <!-- {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }}">
@@ -30,7 +30,7 @@
                     </div>
                 {% endfor %}
             {% endif %}
-        {% endwith %}
+        {% endwith %} -->
         <form method="POST" action="{{ url_for('scrape') }}">
             {{ form.hidden_tag() }}
             <div class="form-group">
@@ -55,12 +55,13 @@
                 <a href="{{ url_for('view_database') }}" class="btn btn-info">View Database</a>
             </div>
         </form>
+        <br>
         {% if session.get('scraping_started') %}
             <div class="alert alert-success">Scraping started!</div>
         {% endif %}
-        {% if session.get('scraping_finished') %}
+        <!-- {% if session.get('scraping_finished') %}
             <div class="alert alert-info">Scraper has finished!</div>
-        {% endif %}
+        {% endif %} -->
     </div>
 </body>
 </html>
