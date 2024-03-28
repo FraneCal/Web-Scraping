@@ -49,6 +49,7 @@ def solve_captcha_slider(driver):
         try:
              # <span class="geetest_reset_tip_content"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Try again</font></font></span>
             try_again_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, 'geetest_reset_tip_content')))
+            try_again_button.click()
         except TimeoutException:
             print('No button "Try again" found.')
     except TimeoutException:
