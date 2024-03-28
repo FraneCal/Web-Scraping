@@ -21,7 +21,6 @@ from solver import PuzleSolver
 
 
 def solve_captcha_slider(driver):
-    # Execute JavaScript to get the Base64-encoded image data
     background_image_data = driver.execute_script(
         "return arguments[0].toDataURL('image/png').substring(21);",
         driver.find_element(By.CSS_SELECTOR, ".geetest_canvas_bg.geetest_absolute")
@@ -31,11 +30,9 @@ def solve_captcha_slider(driver):
         driver.find_element(By.CSS_SELECTOR, ".geetest_canvas_slice.geetest_absolute")
     )
 
-    # Decode the Base64-encoded image data into bytes
     background_image_bytes = base64.b64decode(background_image_data)
     slice_image_bytes = base64.b64decode(slice_image_data)
 
-    # Save the images to files
     with open('background.png', 'wb') as background_file:
         background_file.write(background_image_bytes)
 
@@ -48,10 +45,13 @@ def solve_captcha_slider(driver):
 
     try:
         slider = driver.find_element(By.CLASS_NAME, 'geetest_slider_button')
-        for x in range(0, 260, 43):
-            actions.move_to_element(slider).click_and_hold().move_by_offset(x, 0).release().perform()
-            time.sleep(0.5)
-    except:
+        actions.move_to_element(slider).click_and_hold().move_by_offset(solution, 0).release().perform()
+        try:
+             # <span class="geetest_reset_tip_content"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Try again</font></font></span>
+            try_again_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, 'geetest_reset_tip_content')))
+        except TimeoutException:
+            print('No button "Try again" found.')
+    except TimeoutException:
         print('No slider found. Continuing with the code.')
 
 
@@ -340,7 +340,7 @@ captcha.click()
 time.sleep(4)
 
 # Solve captcha slider
-#solve_captcha_slider(driver)
+solve_captcha_slider(driver)
 
 time.sleep(4)
 
