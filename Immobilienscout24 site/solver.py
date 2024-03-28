@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import os
 
 
 PIXELS_EXTENSION = 10
@@ -12,7 +13,13 @@ class PuzleSolver:
 
     def get_position(self):
         template, x_inf, y_sup, y_inf = self.__piece_preprocessing()
+        if template is None:
+            print('Error: template image not found')
+            return None
         background = self.__background_preprocessing(y_sup, y_inf)
+        if background is None:
+            print('Error: background image not found')
+            return None
 
         res = cv2.matchTemplate(background, template, cv2.TM_CCOEFF_NORMED)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
@@ -93,6 +100,6 @@ class PuzleSolver:
         return grad
 
     def __img_to_grayscale(self, img):
-        tmp_path = "/tmp/sobel.png"
+        tmp_path = os.path.dirname(__file__) + '\\sobel.png'
         cv2.imwrite(tmp_path, img)
         return cv2.imread(tmp_path, 0)
