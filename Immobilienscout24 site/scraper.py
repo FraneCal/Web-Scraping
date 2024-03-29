@@ -14,7 +14,6 @@ import sqlite3
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from flask import session
 import base64
 import re
 import sys
@@ -24,8 +23,8 @@ import os
 
 load_dotenv()
 
+
 def solve_captcha_slider(driver):
-    # Execute JavaScript to get the Base64-encoded image data
     background_image_data = driver.execute_script(
         "return arguments[0].toDataURL('image/png').substring(21);",
         driver.find_element(By.CSS_SELECTOR, ".geetest_canvas_bg.geetest_absolute")
@@ -48,15 +47,18 @@ def solve_captcha_slider(driver):
 
     solver = PuzleSolver("piece.png", "background.png")
     solution = solver.get_position()
-    print(solution)
 
     try:
         slider = driver.find_element(By.CLASS_NAME, 'geetest_slider_button')
-        for x in range(0, 260, 43):
-            actions.move_to_element(slider).click_and_hold().move_by_offset(x, 0).release().perform()
-            time.sleep(0.5)
-    except:
+        actions.move_to_element(slider).click_and_hold().move_by_offset(solution, 0).release().perform()
+        try:
+            try_again_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, 'geetest_reset_tip_content')))
+            try_again_button.click()
+        except TimeoutException:
+            print('No button "Try again" found.')
+    except TimeoutException:
         print('No slider found. Continuing with the code.')
+        
 
 
 def accept_cookies(driver):
@@ -321,6 +323,7 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS houses (
                 )''')
 
 base_url = sys.argv[4]
+#base_url = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/steglitz-zehlendorf/haus-kaufen?enteredFrom=one_step_search'
 
 start_page = 1
 
@@ -344,7 +347,7 @@ captcha.click()
 time.sleep(4)
 
 # Solve captcha slider
-#solve_captcha_slider(driver)
+solve_captcha_slider(driver)
 
 time.sleep(4)
 
@@ -401,6 +404,7 @@ while True:
 
 
 # Check if any links need to be removed based on their content
+#exclude_words = ['Zwangsversteigerungen', 'Dachrohling']
 exclude_words = [sys.argv[5]]
 check_words_in_link_content(cursor, exclude_words)
 
