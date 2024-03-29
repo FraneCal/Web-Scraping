@@ -94,6 +94,7 @@ def run_scraper(city, subregion, apart_or_house, words_to_check):
     #subprocess.run(['python', 'scraper.py', city, subregion, apart_or_house, base_url, words_to_check])
     subprocess.run(['python', 'test_file.py'])
 
+    return url_for('scraping_finished')
     # with app.app_context():
     #     return redirect(url_for('scraping_finished'))
 
