@@ -96,8 +96,6 @@ def run_scraper(city, subregion, apart_or_house, words_to_check):
 
     # with app.app_context():
     #     return redirect(url_for('scraping_finished'))
-    with app.app_context():
-        return redirect(url_for('scraping_finished'))
 
 def get_database_contents():
     conn = sqlite3.connect('database.db')
