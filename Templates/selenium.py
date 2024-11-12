@@ -4,11 +4,14 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+import time
 
 URL = "ENTER URL"
 
 driver = webdriver.Chrome()
 driver.get(URL)
+
+time.sleep(3)
 
 page_source = driver.page_source
 
